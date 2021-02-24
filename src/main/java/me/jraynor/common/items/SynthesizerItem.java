@@ -5,12 +5,12 @@ import me.jraynor.common.data.IOMode;
 import me.jraynor.common.data.LinkData;
 import me.jraynor.common.data.TransferMode;
 import me.jraynor.common.network.Network;
-import me.jraynor.common.network.packets.LeftClickAir;
-import me.jraynor.common.network.packets.LeftClickBlock;
+import me.jraynor.common.network.packets.*;
 import me.jraynor.common.tiles.UtilityTile;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -102,6 +102,7 @@ public class SynthesizerItem extends Item {
                 if (LinkData.isLinked(stack)) {
                     var block = LinkData.read(stack);
                     var name = worldIn.getBlockState(block.getPos()).getBlock().getTranslatedName().getString();
+                    Network.sendToClient(new LinkReset(block.getPos(), block.getSide()), (ServerPlayerEntity) playerIn);
                     LinkData.clear(stack);
                     playerIn.sendStatusMessage(new StringTextComponent(TextFormatting.WHITE + "link " + TextFormatting.RED + "reset" + TextFormatting.WHITE + " from: " + TextFormatting.RED + TextFormatting.UNDERLINE + name + TextFormatting.WHITE + " at " + block.getPos().getCoordinatesAsString()), true);
                 }
@@ -139,13 +140,14 @@ public class SynthesizerItem extends Item {
      * This will first if no link is on the tool, create a new link, which must be set to one of the sides of the tile.
      * Once the tile has been configured then you can link it to another tile.
      */
-    private void writeLink(BlockPos pos, Direction side, ItemStack stack, TileEntity tile, World world, PlayerEntity player) {
+    private void writeLink(BlockPos pos, Direction side, ItemStack stack, TileEntity tile, World world, ServerPlayerEntity player) {
         var newLink = new LinkData(pos, side, transferMode, operation);
         if (LinkData.isLinked(stack) && tile instanceof UtilityTile) {
             var oldLink = LinkData.read(stack);
             var utilityTile = (UtilityTile) tile;
             assert oldLink != null;
             utilityTile.onLink(newLink, oldLink);
+            Network.sendToClient(new LinkComplete(oldLink.getPos(), newLink.getPos(), oldLink.getSide(), newLink.getSide()), player);
             LinkData.clear(stack);
             var state = world.getBlockState(oldLink.getPos());
             player.sendStatusMessage(new StringTextComponent(TextFormatting.GREEN + "completed" + TextFormatting.WHITE + " link with: " + TextFormatting.LIGHT_PURPLE + TextFormatting.UNDERLINE + state.getBlock().getTranslatedName().getString() + TextFormatting.WHITE + " at " + side.name().toLowerCase() + ", " + TextFormatting.GOLD + pos.getCoordinatesAsString()), true);
@@ -153,6 +155,7 @@ public class SynthesizerItem extends Item {
         if (!LinkData.isLinked(stack) && !(tile instanceof UtilityTile)) {
             newLink.write(stack);
             var state = world.getBlockState(pos);
+            Network.sendToClient(new LinkStart(newLink.getPos(), newLink.getSide(), newLink.getOperation()), player);
             player.sendStatusMessage(new StringTextComponent(TextFormatting.AQUA + "started" + TextFormatting.WHITE + " link with: " + TextFormatting.LIGHT_PURPLE + TextFormatting.UNDERLINE + state.getBlock().getTranslatedName().getString() + TextFormatting.WHITE + " at " + side.name().toLowerCase() + ", " + TextFormatting.GOLD + pos.getCoordinatesAsString()), true);
         }
     }

@@ -3,10 +3,7 @@ package me.jraynor.common.network;
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
 import me.jraynor.NoMoreWires;
-import me.jraynor.common.network.packets.LeftClickAir;
-import me.jraynor.common.network.packets.LeftClickBlock;
-import me.jraynor.common.network.packets.TransferData;
-import me.jraynor.common.network.packets.TransferUpdate;
+import me.jraynor.common.network.packets.*;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -60,6 +57,9 @@ public final class Network {
         registerPacket(TransferUpdate.class);
         registerPacket(LeftClickAir.class);
         registerPacket(LeftClickBlock.class);
+        registerPacket(LinkStart.class);
+        registerPacket(LinkReset.class);
+        registerPacket(LinkComplete.class);
     }
 
     /**
