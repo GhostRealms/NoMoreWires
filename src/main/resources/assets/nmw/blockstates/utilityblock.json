@@ -1,0 +1,50 @@
+{
+  "variants": {
+    "facing=down,powered=false": {
+      "model": "nmw:block/utilityblock",
+      "x": 90
+    },
+    "facing=up,powered=false": {
+      "model": "nmw:block/utilityblock",
+      "x": -90
+    },
+    "facing=north,powered=false": {
+      "model": "nmw:block/utilityblock"
+    },
+    "facing=south,powered=false": {
+      "model": "nmw:block/utilityblock",
+      "y": 180
+    },
+    "facing=west,powered=false": {
+      "model": "nmw:block/utilityblock",
+      "y": 270
+    },
+    "facing=east,powered=false": {
+      "model": "nmw:block/utilityblock",
+      "y": 90
+    },
+    "facing=down,powered=true": {
+      "model": "nmw:block/utilityblock_powered",
+      "x": 90
+    },
+    "facing=up,powered=true": {
+      "model": "nmw:block/utilityblock_powered",
+      "x": -90
+    },
+    "facing=north,powered=true": {
+      "model": "nmw:block/utilityblock_powered"
+    },
+    "facing=south,powered=true": {
+      "model": "nmw:block/utilityblock_powered",
+      "y": 180
+    },
+    "facing=west,powered=true": {
+      "model": "nmw:block/utilityblock_powered",
+      "y": 270
+    },
+    "facing=east,powered=true": {
+      "model": "nmw:block/utilityblock_powered",
+      "y": 90
+    }
+  }
+}
