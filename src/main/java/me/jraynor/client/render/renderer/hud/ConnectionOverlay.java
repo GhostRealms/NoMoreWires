@@ -1,10 +1,13 @@
-package me.jraynor.client.render.renderer;
+package me.jraynor.client.render.renderer.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.datafixers.util.Pair;
 import lombok.Getter;
-import me.jraynor.client.render.api.*;
-import me.jraynor.common.data.LinkData;
+import me.jraynor.client.render.api.AbstractRenderer;
+import me.jraynor.client.render.api.hud.IRenderer2d;
+import me.jraynor.client.render.api.hud.ITextRenderer;
+import me.jraynor.client.render.api.core.IAbsorbable;
+import me.jraynor.client.render.api.util.RendererType;
 import me.jraynor.common.items.SynthesizerItem;
 import me.jraynor.core.ModRegistry;
 import net.minecraft.item.ItemStack;
@@ -22,9 +25,13 @@ public class ConnectionOverlay extends AbstractRenderer implements IAbsorbable, 
 
     public ConnectionOverlay() {
         super(RendererType.HUD);
+    }
+    /**
+     * This will be called whenever the renderer starts.
+     */
+    @Override public void initialize() {
         addTexture("bg", "textures/gui/overlay.png", 128, 128);
     }
-
     /**
      * Here we want to check to see if the player is holding the {@link me.jraynor.common.items.SynthesizerItem}
      * to decided whether or not to be enabled
@@ -35,6 +42,8 @@ public class ConnectionOverlay extends AbstractRenderer implements IAbsorbable, 
             setEnabled(itemStack.getItem() == ModRegistry.SYNTHESIZER_ITEM.get());
         }
     }
+
+
 
     /**
      * Here we should be able to render the

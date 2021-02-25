@@ -1,9 +1,12 @@
 package me.jraynor.client.render;
 
 import lombok.Getter;
-import lombok.Setter;
-import me.jraynor.client.render.api.*;
-import me.jraynor.client.render.renderer.ConnectionOverlay;
+import me.jraynor.client.render.api.AbstractRenderer;
+import me.jraynor.client.render.api.core.IRenderer;
+import me.jraynor.client.render.api.core.IAbsorbable;
+import me.jraynor.client.render.api.core.IParentable;
+import me.jraynor.client.render.api.util.RendererType;
+import me.jraynor.client.render.renderer.hud.ConnectionOverlay;
 import me.jraynor.client.render.renderer.ConnectionRenderer;
 import me.jraynor.client.render.renderer.IOModeRenderer;
 import net.minecraftforge.api.distmarker.Dist;

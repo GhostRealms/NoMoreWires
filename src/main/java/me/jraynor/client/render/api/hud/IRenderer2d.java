@@ -1,10 +1,7 @@
-package me.jraynor.client.render.api;
+package me.jraynor.client.render.api.hud;
 
+import me.jraynor.client.render.api.core.IRenderer;
 import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.util.ColorHelper;
-import net.minecraft.util.Direction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
 
 /**
  * This will allow for the rendering of basic shapes in the world.

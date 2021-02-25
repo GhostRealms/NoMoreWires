@@ -1,5 +1,8 @@
-package me.jraynor.client.render.api;
+package me.jraynor.client.render.api.core;
 
+import me.jraynor.client.render.api.core.IParentable;
+import me.jraynor.client.render.api.core.IRenderer;
+import me.jraynor.client.render.api.hud.ITextureHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -56,6 +59,14 @@ public interface IAbsorbable extends IRenderer {
         setContext(parent.getContext());
         setProMatrix(parent.getProMatrix());
         setPartialTicks(parent.getPartialTicks());
+        setMouseX(parent.getMouseX());
+        setMouseY(parent.getMouseY());
+
+        if (this instanceof ITextureHolder && parent instanceof ITextureHolder) {
+            var from = (ITextureHolder) parent;
+            var self = (ITextureHolder) this;
+            self.getTextures().putAll(from.getTextures());
+        }
     }
 
 }

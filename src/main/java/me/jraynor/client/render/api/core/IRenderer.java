@@ -1,7 +1,8 @@
-package me.jraynor.client.render.api;
+package me.jraynor.client.render.api.core;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import me.jraynor.client.render.MasterRenderer;
+import me.jraynor.client.render.api.util.RendererType;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.WorldRenderer;
@@ -61,16 +62,29 @@ public interface IRenderer {
 
     void setFont(FontRenderer renderer);
 
+    int getMouseX();
+
+    void setMouseX(int x);
+
+    int getMouseY();
+
+    void setMouseY(int y);
+
+    /**
+     * This will be called whenever the renderer starts.
+     */
+    void initialize();
+
     /**
      * This can be ignored and implemented in other ways,
      * but all renderers will have a generic render method
      */
-    default void render() {}
+    void render();
 
     /**
      * This will be called every single tick from the tick event
      */
-    default void tick() {}
+    void tick();
 
     /**
      * @return true if everything is not null
@@ -90,6 +104,12 @@ public interface IRenderer {
                     && getStack() != null
                     && getWindow() != null
                     && getFont() != null
+                    && isEnabled();
+        else if (getType() == RendererType.SCREEN)
+            return getStack() != null
+                    && getMouseX() != -1
+                    && getMouseY() != -1
+                    && getWorld() != null
                     && isEnabled();
         return false;
     }

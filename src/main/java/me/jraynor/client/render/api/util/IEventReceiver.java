@@ -1,4 +1,4 @@
-package me.jraynor.client.render.api;
+package me.jraynor.client.render.api.util;
 
 import net.minecraftforge.eventbus.api.Event;
 

@@ -39,6 +39,7 @@ public abstract class AbstractTileRenderer<T extends TileEntity> extends TileEnt
 
     public AbstractTileRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
         super(rendererDispatcherIn);
+        init();
     }
 
     /**
@@ -56,7 +57,7 @@ public abstract class AbstractTileRenderer<T extends TileEntity> extends TileEnt
     }
 
     abstract void render();
-    
+    abstract void init();
     /**
      * This will add a new quad
      */
@@ -155,6 +156,13 @@ public abstract class AbstractTileRenderer<T extends TileEntity> extends TileEnt
      */
     protected TextureAtlasSprite getSprite(ResourceLocation location) {
         return Minecraft.getInstance().getAtlasSpriteGetter(AtlasTexture.LOCATION_BLOCKS_TEXTURE).apply(location);
+    }
+
+    /**
+     * @return the instance of the model shapes.
+     */
+    protected BlockModelShapes getBlockModelShapes(){
+        return Minecraft.getInstance().getModelManager().getBlockModelShapes();
     }
 
 }

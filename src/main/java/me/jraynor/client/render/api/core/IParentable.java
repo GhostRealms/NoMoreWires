@@ -1,4 +1,6 @@
-package me.jraynor.client.render.api;
+package me.jraynor.client.render.api.core;
+
+import me.jraynor.client.render.api.util.RendererType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +18,7 @@ public interface IParentable extends IRenderer {
      *
      * @param renderer the renderer to add
      */
-    default void addChild(AbstractRenderer renderer) {
+    default void addChild(IRenderer renderer) {
         getChildren().computeIfAbsent(renderer.getType(), type -> new ArrayList<>()).add(renderer);
     }
 

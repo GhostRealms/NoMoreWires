@@ -1,10 +1,10 @@
-package me.jraynor.client.render.api;
+package me.jraynor.client.render.api.hud;
 
 import com.mojang.datafixers.util.Pair;
 import me.jraynor.NoMoreWires;
+import me.jraynor.client.render.api.core.IRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.vector.Vector3i;
 
 import java.util.Map;
 

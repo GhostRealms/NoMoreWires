@@ -1,25 +1,14 @@
 package me.jraynor.core;
 
 import me.jraynor.NoMoreWires;
-import me.jraynor.client.screens.UtilityScreen;
-import me.jraynor.common.data.LinkData;
+import me.jraynor.client.render.renderer.screens.UtilityScreen;
 import me.jraynor.common.network.Network;
-import me.jraynor.common.network.packets.LeftClickAir;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.Event;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * This class subscribes to all of the mods events.

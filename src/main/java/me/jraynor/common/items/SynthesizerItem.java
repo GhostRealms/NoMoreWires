@@ -111,30 +111,6 @@ public class SynthesizerItem extends Item {
         return super.onItemRightClick(worldIn, playerIn, handIn);
     }
 
-    /**
-     * Called when the user right clicks
-     */
-    @Override
-    public ActionResultType onItemUse(ItemUseContext ctx) {
-//        if (ctx.getWorld().isRemote)
-//            return ActionResultType.SUCCESS;
-//        var player = ctx.getPlayer();
-//        var world = ctx.getWorld();
-//        if (!world.isRemote && player != null) {
-//            var pos = ctx.getPos();
-//            var side = ctx.getFace();
-//            var stack = ctx.getItem();
-//            var tile = world.getTileEntity(pos);
-//            if (LinkData.isLinkable(transferMode, world, pos, side)) {
-//                writeLink(pos, side, stack, tile, world, player);
-//                return ActionResultType.CONSUME;
-//            } else {
-//                var name = world.getBlockState(pos).getBlock().getTranslatedName().getString();
-//                ctx.getPlayer().sendStatusMessage(new StringTextComponent("Synthesizer " + TextFormatting.RED + "can't" + TextFormatting.WHITE + " link with " + TextFormatting.GREEN + name + TextFormatting.WHITE + " in " + TextFormatting.UNDERLINE + TextFormatting.DARK_PURPLE + transferMode.name().toLowerCase() + " mode!"), true);
-//            }
-//        }
-        return ActionResultType.PASS;
-    }
 
     /**
      * This will first if no link is on the tool, create a new link, which must be set to one of the sides of the tile.

@@ -1,4 +1,6 @@
 {
   "block.nmw.utilityblock": "Utility Block",
-  "item.nmw.synthesizer": "Quantum Synthesizer"
+  "block.nmw.singularity": "Singularity",
+  "screen.nmw.singularity": "Singularity",
+  "item.nmw.synthesizer": "Synthesizer"
 }

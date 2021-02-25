@@ -1,7 +1,9 @@
 package me.jraynor.client.render.renderer;
 
-import com.mojang.blaze3d.vertex.IVertexBuilder;
-import me.jraynor.client.render.api.*;
+import me.jraynor.client.render.api.AbstractRenderer;
+import me.jraynor.client.render.api.core.IAbsorbable;
+import me.jraynor.client.render.api.util.RendererType;
+import me.jraynor.client.render.api.world.IRenderer3d;
 import me.jraynor.common.network.Network;
 import me.jraynor.common.network.packets.LinkComplete;
 import me.jraynor.common.network.packets.LinkReset;

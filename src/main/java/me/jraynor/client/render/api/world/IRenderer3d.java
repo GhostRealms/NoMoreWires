@@ -1,5 +1,6 @@
-package me.jraynor.client.render.api;
+package me.jraynor.client.render.api.world;
 
+import me.jraynor.client.render.api.core.IRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.util.Direction;

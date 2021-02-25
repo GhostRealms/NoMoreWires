@@ -1,6 +1,9 @@
 package me.jraynor.client.render.renderer;
 
-import me.jraynor.client.render.api.*;
+import me.jraynor.client.render.api.AbstractRenderer;
+import me.jraynor.client.render.api.core.IAbsorbable;
+import me.jraynor.client.render.api.util.RendererType;
+import me.jraynor.client.render.api.world.IRenderer3d;
 
 /**
  * This is the world renderer, it can render the world
