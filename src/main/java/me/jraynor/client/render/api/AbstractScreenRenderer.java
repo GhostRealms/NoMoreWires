@@ -3,52 +3,104 @@ package me.jraynor.client.render.api;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Getter;
 import lombok.Setter;
-import me.jraynor.client.render.api.core.IParentable;
+import me.jraynor.client.render.api.core.IContainer;
 import me.jraynor.client.render.api.core.IRenderer;
-import me.jraynor.client.render.api.util.RendererType;
-import net.minecraft.client.MainWindow;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
+import me.jraynor.client.render.api.core.RenderType;
+import me.jraynor.client.render.api.hud.IInputEvents;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.World;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * This allows us to use the renderer features in a screen
  */
-public abstract class AbstractScreenRenderer extends Screen implements IRenderer, IParentable {
-    @Getter @Setter protected World world;
-    @Getter @Setter protected WorldRenderer context;
-    @Getter @Setter protected MatrixStack stack;
-    @Getter @Setter protected Matrix4f proMatrix;
-    @Getter @Setter protected float partialTicks;
-    @Getter @Setter protected RendererType type;
+public abstract class AbstractScreenRenderer extends Screen implements IRenderer, IContainer {
+    @Getter @Setter protected RenderType type;
     @Getter @Setter protected boolean enabled;
-    @Getter @Setter protected PlayerEntity player;
-    @Getter @Setter protected RenderGameOverlayEvent.ElementType element;
-    @Getter @Setter protected MainWindow window;
-    @Getter @Setter protected FontRenderer font;
-    @Getter @Setter protected int mouseX, mouseY;
-    @Getter private final Map<RendererType, List<IRenderer>> children = new HashMap<>();
+    @Getter private final Map<RenderType, List<IRenderer>> children = new HashMap<>();
+    @Getter @Setter IRenderer parent;
+    @Getter @Setter private boolean initialized = false;
 
-    protected AbstractScreenRenderer(ITextComponent titleIn) {
+    public AbstractScreenRenderer(ITextComponent titleIn) {
         super(titleIn);
     }
+
+    /**
+     * This will register all of the input events. This
+     * allows them to be passed to the children
+     */
+    protected void subscribe() {
+        /**
+         * This is used to pass the event to the children
+         */
+        Consumer<InputEvent.MouseInputEvent> onMouse = (event) -> {
+            getChildren().values().forEach(renderers -> renderers.forEach(renderer -> {
+                if (renderer instanceof IInputEvents) {
+                    var events = (IInputEvents) renderer;
+                    events.onMouse(event);
+                }
+            }));
+        };
+
+        MinecraftForge.EVENT_BUS.addListener(onMouse);
+        /**
+         * This is used to pass the event to the children
+         */
+        Consumer<InputEvent.ClickInputEvent> onClick = (event) -> {
+            getChildren().values().forEach(renderers -> renderers.forEach(renderer -> {
+                if (renderer instanceof IInputEvents) {
+                    var events = (IInputEvents) renderer;
+                    events.onClick(event);
+                }
+            }));
+        };
+        MinecraftForge.EVENT_BUS.addListener(onClick);
+        /**
+         * This is used to pass the event to the children
+         */
+        Consumer<InputEvent.KeyInputEvent> onKey = (event) -> {
+            getChildren().values().forEach(renderers -> renderers.forEach(renderer -> {
+                if (renderer instanceof IInputEvents) {
+                    var events = (IInputEvents) renderer;
+                    events.onKey(event);
+                }
+            }));
+        };
+        MinecraftForge.EVENT_BUS.addListener(onKey);
+        /**
+         * This is used to pass the event to the children
+         */
+        Consumer<InputEvent.MouseScrollEvent> onScroll = (event) -> {
+            getChildren().values().forEach(renderers -> renderers.forEach(renderer -> {
+                if (renderer instanceof IInputEvents) {
+                    var events = (IInputEvents) renderer;
+                    events.onScroll(event);
+                }
+            }));
+        };
+        MinecraftForge.EVENT_BUS.addListener(onScroll);
+    }
+
 
     /**
      * This will be called whenever the screen starts,
      * and we'll forward it to the initilaize method.
      */
     @Override protected void init() {
-        this.initialize();
+        tryInitialize();
+        passChildren();
+        getChildren().values().forEach(child -> {
+            child.forEach(it -> {
+                it.setParent(this);
+                it.tryInitialize();
+            });
+        });
     }
 
     /**
@@ -56,27 +108,26 @@ public abstract class AbstractScreenRenderer extends Screen implements IRenderer
      * we're extending abstract screen it's tick function takes precedence.
      */
     @Override public void tick() {
-        tickChildren(RendererType.SCREEN);
+        super.tick();
+        tickChildren(RenderType.SCREEN);
     }
 
     /**
      * This will render all of the children who are of the type screen
      */
     @Override public void render() {
-        renderChildren(RendererType.SCREEN);
+        renderChildren(RenderType.SCREEN);
     }
+
 
     /**
      * here we want to render all of the children
      */
     @Override public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.world = Minecraft.getInstance().world;
-        this.player = Minecraft.getInstance().player;
-        this.font = Minecraft.getInstance().fontRenderer;
-        this.stack = matrixStack;
-        this.mouseX = mouseX;
-        this.mouseY = mouseY;
-        this.partialTicks = partialTicks;
+        ctx().setStack(matrixStack);
+        ctx().setMouseX(mouseX);
+        ctx().setMouseY(mouseY);
+        ctx().setPartialTicks(partialTicks);
         render();
     }
 }

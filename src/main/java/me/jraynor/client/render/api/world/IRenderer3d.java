@@ -18,22 +18,22 @@ public interface IRenderer3d extends IRenderer {
      */
     default void drawLine(Vector3d start, Vector3d stop, int r, int g, int b, int a) {
         //TODO translate
-        getStack().push();
+        ctx().getStack().push();
         var buffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
         var builder = buffer.getBuffer(RenderType.LINES);
-        builder.pos(getStack().getLast().getMatrix(), (float) start.x, (float) start.y, (float) start.z)
+        builder.pos(ctx().getStack().getLast().getMatrix(), (float) start.x, (float) start.y, (float) start.z)
                 .color(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f)
                 .tex(0, 0)
                 .lightmap(0, 240)
                 .normal(1, 0, 0)
                 .endVertex();
-        builder.pos(getStack().getLast().getMatrix(), (float) stop.x, (float) stop.y, (float) stop.z)
+        builder.pos(ctx().getStack().getLast().getMatrix(), (float) stop.x, (float) stop.y, (float) stop.z)
                 .color(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f)
                 .tex(0, 0)
                 .lightmap(0, 240)
                 .normal(1, 0, 0)
                 .endVertex();
-        getStack().pop();
+        ctx().getStack().pop();
     }
 
     /**

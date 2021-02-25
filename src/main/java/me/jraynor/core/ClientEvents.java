@@ -2,7 +2,7 @@ package me.jraynor.core;
 
 import me.jraynor.NoMoreWires;
 import me.jraynor.client.render.MasterRenderer;
-import me.jraynor.client.render.api.util.RendererType;
+import me.jraynor.client.render.api.core.RenderType;
 import me.jraynor.common.network.Network;
 import me.jraynor.common.network.packets.LeftClickAir;
 import me.jraynor.common.network.packets.LeftClickBlock;
@@ -27,7 +27,7 @@ public class ClientEvents {
      */
     @SubscribeEvent public static void onDrawLast(RenderWorldLastEvent event) {
         MasterRenderer.getInstance().fromEvent(event);
-        MasterRenderer.getInstance().renderChildren(RendererType.WORLD);
+        MasterRenderer.getInstance().renderChildren(RenderType.WORLD);
     }
 
     /**
@@ -37,7 +37,7 @@ public class ClientEvents {
      */
     @SubscribeEvent public static void onDrawHud(RenderGameOverlayEvent.Post event) {
         MasterRenderer.getInstance().fromEvent(event);
-        MasterRenderer.getInstance().renderChildren(RendererType.HUD);
+        MasterRenderer.getInstance().renderChildren(RenderType.HUD);
     }
 
     /**
@@ -47,8 +47,8 @@ public class ClientEvents {
      */
     @SubscribeEvent public static void onTick(TickEvent event) {
         if (event instanceof TickEvent.ClientTickEvent) {
-            MasterRenderer.getInstance().tickChildren(RendererType.WORLD);
-            MasterRenderer.getInstance().tickChildren(RendererType.HUD);
+            MasterRenderer.getInstance().tickChildren(RenderType.WORLD);
+            MasterRenderer.getInstance().tickChildren(RenderType.HUD);
         }
     }
 

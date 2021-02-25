@@ -2,7 +2,7 @@ package me.jraynor.client.render.renderer;
 
 import me.jraynor.client.render.api.AbstractRenderer;
 import me.jraynor.client.render.api.core.IAbsorbable;
-import me.jraynor.client.render.api.util.RendererType;
+import me.jraynor.client.render.api.core.RenderType;
 import me.jraynor.client.render.api.world.IRenderer3d;
 import me.jraynor.common.network.Network;
 import me.jraynor.common.network.packets.LinkComplete;
@@ -16,7 +16,13 @@ import net.minecraftforge.fml.network.NetworkEvent;
  */
 public class ConnectionRenderer extends AbstractRenderer implements IAbsorbable, IRenderer3d {
     public ConnectionRenderer() {
-        super(RendererType.WORLD);
+        super(RenderType.WORLD);
+    }
+
+    /**
+     * This will subscribe us to the event network system.
+     */
+    @Override public void initialize() {
         Network.subscribe(this);
     }
 
@@ -49,19 +55,12 @@ public class ConnectionRenderer extends AbstractRenderer implements IAbsorbable,
     }
 
     /**
-     * This will be called 20 times per second and is used to update elements on the screen.
-     * because we don't have children we don't need the super
-     */
-    @Override public void tick() {
-    }
-
-    /**
      * Here we want to render our connections between the various machines
      */
     @Override public void render() {
-        stack.push();
-        drawLine(new Vector3d(player.getPosX(), player.getPosY(), player.getPosZ()), new Vector3d(player.getPosX(), player.getPosY() + 100, player.getPosZ()), 255, 255, 255, 255);
-        stack.pop();
+        ctx().getStack().push();
+        drawLine(new Vector3d(ctx().getPlayer().getPosX(), ctx().getPlayer().getPosY(), ctx().getPlayer().getPosZ()), new Vector3d(ctx().getPlayer().getPosX(), ctx().getPlayer().getPosY() + 100, ctx().getPlayer().getPosZ()), 255, 255, 255, 255);
+        ctx().getStack().pop();
     }
 
 

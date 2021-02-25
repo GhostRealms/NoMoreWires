@@ -11,13 +11,13 @@ public interface ITextRenderer extends IRenderer {
      * This will render a quad for the given face in the given direction.
      */
     default void drawString(String text, int x, int y, int color) {
-        getFont().drawStringWithShadow(getStack(), text, x, y, color);
+        ctx().getFont().drawStringWithShadow(ctx().getStack(), text, x, y, color);
     }
 
     /**
      * Renders a string with the given color
      */
     default void drawCenterString(String text, int x, int y, int color) {
-        getFont().drawStringWithShadow(getStack(), text, (float) (x - getFont().getStringWidth(text) / 2), (float) y, color);
+        ctx().getFont().drawStringWithShadow(ctx().getStack(), text, (float) (x - ctx().getFont().getStringWidth(text) / 2), (float) y, color);
     }
 }

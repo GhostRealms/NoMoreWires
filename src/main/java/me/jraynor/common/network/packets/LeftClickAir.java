@@ -1,7 +1,6 @@
 package me.jraynor.common.network.packets;
 
 import me.jraynor.common.network.IPacket;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 
@@ -25,11 +24,12 @@ public class LeftClickAir implements IPacket {
     /**
      * This will construct the packet from the buffer.
      *
-     * @param buffer the buffer to construct the packet from
+     * @param buf the buffer to construct the packet from
+     * @return
      */
-    @Override public void readBuffer(PacketBuffer buffer) {
-        this.itemStack = buffer.readItemStack();
-        this.sneaking = buffer.readBoolean();
+    @Override public void readBuffer(PacketBuffer buf) {
+        this.itemStack = buf.readItemStack();
+        this.sneaking = buf.readBoolean();
     }
 
     /**

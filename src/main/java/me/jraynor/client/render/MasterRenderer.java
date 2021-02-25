@@ -2,13 +2,12 @@ package me.jraynor.client.render;
 
 import lombok.Getter;
 import me.jraynor.client.render.api.AbstractRenderer;
+import me.jraynor.client.render.api.core.IContainer;
 import me.jraynor.client.render.api.core.IRenderer;
 import me.jraynor.client.render.api.core.IAbsorbable;
-import me.jraynor.client.render.api.core.IParentable;
-import me.jraynor.client.render.api.util.RendererType;
+import me.jraynor.client.render.api.core.RenderType;
 import me.jraynor.client.render.renderer.hud.ConnectionOverlay;
 import me.jraynor.client.render.renderer.ConnectionRenderer;
-import me.jraynor.client.render.renderer.IOModeRenderer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -20,14 +19,15 @@ import java.util.Map;
  * This is a singleton class that render things on screen for debugging and other purposes.
  */
 @OnlyIn(Dist.CLIENT)
-public final class MasterRenderer extends AbstractRenderer implements IAbsorbable, IParentable {
+public final class MasterRenderer extends AbstractRenderer implements IAbsorbable, IContainer {
     @Getter private static final MasterRenderer instance = new MasterRenderer();
-    @Getter private final Map<RendererType, List<IRenderer>> children = new HashMap<>();
+    @Getter private final Map<RenderType, List<IRenderer>> children = new HashMap<>();
 
     private MasterRenderer() {
-        super();
+        super(RenderType.WORLD);
         addChild(new ConnectionRenderer());
-        addChild(new IOModeRenderer());
         addChild(new ConnectionOverlay());
+        initialize();
     }
+
 }

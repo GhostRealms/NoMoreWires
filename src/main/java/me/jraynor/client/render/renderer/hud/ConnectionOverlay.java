@@ -7,7 +7,8 @@ import me.jraynor.client.render.api.AbstractRenderer;
 import me.jraynor.client.render.api.hud.IRenderer2d;
 import me.jraynor.client.render.api.hud.ITextRenderer;
 import me.jraynor.client.render.api.core.IAbsorbable;
-import me.jraynor.client.render.api.util.RendererType;
+import me.jraynor.client.render.api.core.RenderType;
+import me.jraynor.client.render.api.hud.ITextureHolder;
 import me.jraynor.common.items.SynthesizerItem;
 import me.jraynor.core.ModRegistry;
 import net.minecraft.item.ItemStack;
@@ -20,36 +21,38 @@ import java.util.Map;
 /**
  * Renders an overlay with the connection information for the player
  */
-public class ConnectionOverlay extends AbstractRenderer implements IAbsorbable, ITextRenderer, IRenderer2d {
+public class ConnectionOverlay extends AbstractRenderer implements IAbsorbable, ITextRenderer, ITextureHolder, IRenderer2d {
     @Getter private final Map<String, Pair<ResourceLocation, Pair<Integer, Integer>>> textures = new HashMap<>();
 
     public ConnectionOverlay() {
-        super(RendererType.HUD);
+        super(RenderType.HUD);
+        addTexture("overlay", "textures/gui/overlay.png", 128, 128);
     }
+
     /**
      * This will be called whenever the renderer starts.
      */
     @Override public void initialize() {
-        addTexture("bg", "textures/gui/overlay.png", 128, 128);
+        addTexture("overlay", "textures/gui/overlay.png", 128, 128);
     }
+
     /**
      * Here we want to check to see if the player is holding the {@link me.jraynor.common.items.SynthesizerItem}
      * to decided whether or not to be enabled
      */
     @Override public void tick() {
-        if (player != null) {
-            var itemStack = player.getHeldItemMainhand();
+        if (ctx().getPlayer() != null) {
+            var itemStack = ctx().getPlayer().getHeldItemMainhand();
             setEnabled(itemStack.getItem() == ModRegistry.SYNTHESIZER_ITEM.get());
         }
     }
-
 
 
     /**
      * Here we should be able to render the
      */
     @Override public void render() {
-        var itemStack = player.getHeldItemMainhand();
+        var itemStack = ctx().getPlayer().getHeldItemMainhand();
         if (itemStack.getItem() == ModRegistry.SYNTHESIZER_ITEM.get()) {
             drawBackground(itemStack);
             drawForeground(itemStack);
@@ -60,7 +63,7 @@ public class ConnectionOverlay extends AbstractRenderer implements IAbsorbable, 
      * This will draw the background
      */
     private void drawBackground(ItemStack itemStack) {
-        drawTexture("bg", 10, 10, 1, 40, 127, 47);
+        drawTexture("overlay", 10, 10, 1, 40, 127, 47);
     }
 
     /**

@@ -26,13 +26,13 @@ public class TransferUpdate implements IPacket {
     /**
      * This will construct the packet from the buffer.
      *
-     * @param buffer the buffer to construct the packet from
+     * @param buf the buffer to construct the packet from
      */
-    @Override public void readBuffer(PacketBuffer buffer) {
-        this.pos = buffer.readBlockPos();
-        this.direction = buffer.readEnumValue(Direction.class);
-        this.transfer = buffer.readEnumValue(TransferMode.class);
-        this.operation = buffer.readEnumValue(IOMode.class);
+    @Override public void readBuffer(PacketBuffer buf) {
+        this.pos = buf.readBlockPos();
+        this.direction = buf.readEnumValue(Direction.class);
+        this.transfer = buf.readEnumValue(TransferMode.class);
+        this.operation = buf.readEnumValue(IOMode.class);
     }
 
     /**

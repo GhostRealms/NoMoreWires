@@ -2,7 +2,6 @@ package me.jraynor.client.render.api.core;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import me.jraynor.client.render.MasterRenderer;
-import me.jraynor.client.render.api.util.RendererType;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.WorldRenderer;
@@ -11,6 +10,7 @@ import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
+import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
 /**
@@ -18,100 +18,54 @@ import java.util.function.Consumer;
  */
 public interface IRenderer {
 
-    World getWorld();
-
-    void setWorld(World world);
-
-    WorldRenderer getContext();
-
-    void setContext(WorldRenderer context);
-
-    MatrixStack getStack();
-
-    void setStack(MatrixStack stack);
-
-    Matrix4f getProMatrix();
-
-    void setProMatrix(Matrix4f proMatrix);
-
-    float getPartialTicks();
-
-    void setPartialTicks(float partialTicks);
+    /**
+     * @return the context instance
+     */
+    default RenderContext ctx() {
+        return RenderContext.INSTANCE;
+    }
 
     boolean isEnabled();
 
     void setEnabled(boolean enabled);
 
-    RendererType getType();
+    RenderType getType();
 
-    void setType(RendererType type);
+    void setType(RenderType type);
 
-    PlayerEntity getPlayer();
+    @Nullable IRenderer getParent();
 
-    void setPlayer(PlayerEntity player);
-
-    MainWindow getWindow();
-
-    void setWindow(MainWindow window);
-
-    RenderGameOverlayEvent.ElementType getElement();
-
-    void setElement(RenderGameOverlayEvent.ElementType element);
-
-    FontRenderer getFont();
-
-    void setFont(FontRenderer renderer);
-
-    int getMouseX();
-
-    void setMouseX(int x);
-
-    int getMouseY();
-
-    void setMouseY(int y);
+    void setParent(IRenderer parent);
 
     /**
      * This will be called whenever the renderer starts.
      */
-    void initialize();
+    default void initialize() {}
 
     /**
      * This can be ignored and implemented in other ways,
      * but all renderers will have a generic render method
      */
-    void render();
+    default void render() {}
 
     /**
      * This will be called every single tick from the tick event
      */
-    void tick();
+    default void tick() {}
+
+
+    void setInitialized(boolean initialized);
+
+    boolean isInitialized();
 
     /**
-     * @return true if everything is not null
+     * This will attempt to initialize if not already initialized
      */
-    default boolean isValid() {
-        if (this instanceof MasterRenderer) return true;
-        if (getType() == RendererType.WORLD)
-            return getWorld() != null
-                    && getContext() != null
-                    && getStack() != null
-                    && getProMatrix() != null
-                    && getPlayer() != null
-                    && isEnabled();
-        else if (getType() == RendererType.HUD)
-            return getWorld() != null
-                    && getPlayer() != null
-                    && getStack() != null
-                    && getWindow() != null
-                    && getFont() != null
-                    && isEnabled();
-        else if (getType() == RendererType.SCREEN)
-            return getStack() != null
-                    && getMouseX() != -1
-                    && getMouseY() != -1
-                    && getWorld() != null
-                    && isEnabled();
-        return false;
+    default void tryInitialize() {
+        if (!isInitialized()) {
+            initialize();
+            setInitialized(true);
+        }
     }
 
     /**

@@ -33,6 +33,7 @@ public class ModEvents {
      * @param event the common setup event
      */
     @SubscribeEvent public static void onClientInit(final FMLClientSetupEvent event) {
+//        ScreenManager.registerFactory(ModRegistry.UTILITY_BLOCK_CONTAINER.get(), SingularityScreen::new);
         ScreenManager.registerFactory(ModRegistry.UTILITY_BLOCK_CONTAINER.get(), UtilityScreen::new);
         NoMoreWires.logger.debug("Initialized client");
     }

@@ -1,6 +1,7 @@
 package me.jraynor.common.tiles;
 
 import com.google.common.collect.Queues;
+import lombok.Getter;
 import me.jraynor.common.data.IOMode;
 import me.jraynor.common.data.LinkData;
 import me.jraynor.common.data.TransferMode;
@@ -9,6 +10,9 @@ import me.jraynor.common.network.Network;
 import me.jraynor.common.network.packets.TransferData;
 import me.jraynor.common.network.packets.TransferUpdate;
 import me.jraynor.core.ModRegistry;
+import me.jraynor.core.node.ClientNode;
+import me.jraynor.core.node.INode;
+import me.jraynor.core.node.ServerNode;
 import net.minecraft.block.BlockState;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
@@ -19,6 +23,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
@@ -48,10 +54,104 @@ public class UtilityTile extends TileEntity implements ITickableTileEntity {
     private long connTimer = 20; //Checks the connection every second
     private int itemsPerTick = 1;
     private int rfPerTick = 2500;
+    @Getter private final Set<INode> rootNodes = new HashSet<>();
 
     public UtilityTile() {
         super(ModRegistry.UTILITY_BLOCK_TILE.get());
         Network.subscribe(this);
+    }
+
+    /**
+     * This will add a node
+     */
+    public boolean addRoot(INode node) {
+        if (!rootNodes.add(node)) return false;
+        assert world != null;
+        syncNodes(world.isRemote ? NetworkDirection.PLAY_TO_SERVER : NetworkDirection.PLAY_TO_CLIENT);
+        return true;
+    }
+
+    /**
+     * This will send all of the nodes to the client
+     *
+     * @param direction the direction to sync the nodes
+     */
+    public void syncNodes(NetworkDirection direction) {
+        switch (direction) {
+            case PLAY_TO_CLIENT -> rootNodes.forEach(Network::sendToAllClients);
+            case PLAY_TO_SERVER -> rootNodes.forEach(Network::sendToServer);
+        }
+    }
+
+    /**
+     * This method is what will end up linking the blocks. It is called from the synthesizer item.
+     *
+     * @param other the block to link to this
+     * @param self  a link data of this
+     */
+    public boolean onLink(LinkData self, LinkData other) {
+        var node = new ServerNode();
+        node.setMode(other.getType());
+        node.setPos(other.getPos());
+        node.setDir(other.getSide());
+        return addRoot(node);
+    }
+
+
+    /**
+     * This is called when we are syncing the nodes from either client to server or server to client. Both are valid.
+     */
+    private void onNodeSync(INode nodePacket, NetworkEvent.Context ctx) {
+        if (ctx.getDirection() == NetworkDirection.PLAY_TO_SERVER) {
+            ctx.enqueueWork(() -> {
+                var node = findNode(nodePacket);
+                if (node == null) {
+                    if (nodePacket instanceof ClientNode) {
+                        var serverNode = new ServerNode();
+                        serverNode.absorb(nodePacket);
+                        rootNodes.add(serverNode);
+                    }
+                } else
+                    node.absorb(nodePacket);
+            });
+            ctx.setPacketHandled(true);
+        }
+        if (ctx.getDirection() == NetworkDirection.PLAY_TO_CLIENT) {
+            var node = findNode(nodePacket);
+            if (node == null) {
+                if (nodePacket instanceof ServerNode) {
+                    var rand = new Random();
+                    var clientNode = new ClientNode(rand.nextInt(200), rand.nextInt(150));
+                    clientNode.absorb(nodePacket);
+                    rootNodes.add(clientNode);
+                }
+            } else
+                node.absorb(nodePacket);
+            ctx.setPacketHandled(true);
+        }
+    }
+
+    /**
+     * This will attempt to find the node based upon the
+     *
+     * @param toCheck the node to find
+     * @return returns the found node based upon the passed node.
+     */
+    private INode findNode(INode toCheck) {
+        for (var root : rootNodes) {
+            var foundNode = root.findNode(toCheck);
+            if (toCheck.matches(foundNode))
+                return foundNode;
+        }
+        return null;
+    }
+
+    public void onServerNode(ServerNode nodePacket, NetworkEvent.Context ctx) {
+        onNodeSync(nodePacket, ctx);
+    }
+
+    public void onClientNode(ClientNode nodePacket, NetworkEvent.Context ctx) {
+        onNodeSync(nodePacket, ctx);
     }
 
     /**
@@ -83,21 +183,20 @@ public class UtilityTile extends TileEntity implements ITickableTileEntity {
         this.getWorld().notifyBlockUpdate(this.pos, getBlockState(), getBlockState(), Constants.BlockFlags.NOTIFY_NEIGHBORS | Constants.BlockFlags.BLOCK_UPDATE);
     }
 
-
     /**
      * Called 20 times per second on the client and server
      */
     @Override public void tick() {
-        if (!world.isRemote) {
-            if (tick >= connTimer) {
-                checkConnections();
-                tick = 0;
-            }
-            removeNext();
-            processItems();
-            processEnergy();
-            tick++;
-        }
+//        if (!world.isRemote) {
+//            if (tick >= connTimer) {
+//                checkConnections();
+//                tick = 0;
+//            }
+//            removeNext();
+//            processItems();
+//            processEnergy();
+//            tick++;
+//        }
     }
 
     /**
@@ -149,7 +248,6 @@ public class UtilityTile extends TileEntity implements ITickableTileEntity {
             }
         });
     }
-
 
     /**
      * This will process all of the input connection
@@ -321,25 +419,11 @@ public class UtilityTile extends TileEntity implements ITickableTileEntity {
      * Gets the capbility. This is used for allowing easy accesses between other mods that use item handlers,
      * energy handlers etc.
      */
-    @Nonnull @Override public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
+    @Nonnull @Override public <
+            T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
         return super.getCapability(cap, side);
     }
 
-    /**
-     * This method is what will end up linking the blocks. It is called from the synthesizer item.
-     *
-     * @param other the block to link to this
-     * @param self  a link data of this
-     */
-    public void onLink(LinkData self, LinkData other) {
-        transferData.setOperation(self.getSide(), self.getType(), self.getOperation());
-        var contains = !(getConnectionsFor(conn -> conn.io == self.getOperation() && conn.side == self.getSide() && conn.mode == self.getType()).isEmpty());
-        if (!contains) {
-            connections.add(new Connection(self.getSide(), other.getSide(), self.getPos(), other.getPos(), self.getOperation(), self.getType()));
-            System.out.println("Link from " + self.getPos() + " to " + other.getPos());
-            sync();
-        }
-    }
 
     public TransferData getTransferData() {
         return transferData;

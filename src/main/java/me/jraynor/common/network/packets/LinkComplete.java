@@ -21,13 +21,13 @@ public class LinkComplete implements IPacket {
     /**
      * This will construct the packet from the buffer.
      *
-     * @param buffer the buffer to construct the packet from
+     * @param buf the buffer to construct the packet from
      */
-    @Override public void readBuffer(PacketBuffer buffer) {
-        this.from = buffer.readBlockPos();
-        this.to = buffer.readBlockPos();
-        this.fromDir = buffer.readEnumValue(Direction.class);
-        this.toDir = buffer.readEnumValue(Direction.class);
+    @Override public void readBuffer(PacketBuffer buf) {
+        this.from = buf.readBlockPos();
+        this.to = buf.readBlockPos();
+        this.fromDir = buf.readEnumValue(Direction.class);
+        this.toDir = buf.readEnumValue(Direction.class);
     }
 
     /**

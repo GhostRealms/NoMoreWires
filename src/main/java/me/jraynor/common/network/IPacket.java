@@ -11,12 +11,12 @@ import java.util.function.Supplier;
  */
 public interface IPacket {
     /**
-     * This will construct the packet from the buffer.
+     * This will construct the packet from the buf.
      *
-     * @param buffer the buffer to construct the packet from
+     * @param buf the buf to construct the packet from
      */
-    default void readBuffer(PacketBuffer buffer) {
-        read(buffer.readCompoundTag());
+    default void readBuffer(PacketBuffer buf) {
+        read(buf.readCompoundTag());
     }
 
     /**
@@ -51,10 +51,11 @@ public interface IPacket {
      */
     default boolean handle(Supplier<NetworkEvent.Context> ctx) {
         var map = Network.callbacks.get(this.getClass());
-        map.forEach((instance, callbacks) -> callbacks.forEach(consumer -> {
-            if (!ctx.get().getPacketHandled())
-                consumer.accept(this, ctx.get());
-        }));
+        if (map != null)
+            map.forEach((instance, callbacks) -> callbacks.forEach(consumer -> {
+                if (!ctx.get().getPacketHandled())
+                    consumer.accept(this, ctx.get());
+            }));
         return true;
     }
 

@@ -30,13 +30,13 @@ public class LeftClickBlock implements IPacket {
     /**
      * This will construct the packet from the buffer.
      *
-     * @param buffer the buffer to construct the packet from
+     * @param buf the buffer to construct the packet from
      */
-    @Override public void readBuffer(PacketBuffer buffer) {
-        this.itemStack = buffer.readItemStack();
-        this.sneaking = buffer.readBoolean();
-        this.blockPos = buffer.readBlockPos();
-        this.face = buffer.readEnumValue(Direction.class);
+    @Override public void readBuffer(PacketBuffer buf) {
+        this.itemStack = buf.readItemStack();
+        this.sneaking = buf.readBoolean();
+        this.blockPos = buf.readBlockPos();
+        this.face = buf.readEnumValue(Direction.class);
     }
 
     /**

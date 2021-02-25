@@ -23,12 +23,12 @@ public class LinkStart implements IPacket {
     /**
      * This will construct the packet from the buffer.
      *
-     * @param buffer the buffer to construct the packet from
+     * @param buf the buffer to construct the packet from
      */
-    @Override public void readBuffer(PacketBuffer buffer) {
-        this.pos = buffer.readBlockPos();
-        this.direction = buffer.readEnumValue(Direction.class);
-        this.mode = buffer.readEnumValue(IOMode.class);
+    @Override public void readBuffer(PacketBuffer buf) {
+        this.pos = buf.readBlockPos();
+        this.direction = buf.readEnumValue(Direction.class);
+        this.mode = buf.readEnumValue(IOMode.class);
     }
 
     /**

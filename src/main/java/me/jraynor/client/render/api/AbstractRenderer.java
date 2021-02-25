@@ -1,19 +1,11 @@
 package me.jraynor.client.render.api;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
 import lombok.Getter;
 import lombok.Setter;
 import me.jraynor.client.render.api.core.IRenderer;
-import me.jraynor.client.render.api.util.RendererType;
-import net.minecraft.client.MainWindow;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.world.World;
+import me.jraynor.client.render.api.core.RenderType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
 /**
  * The abstract renderer that allows for many different types of rendering
@@ -21,27 +13,14 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
  */
 @OnlyIn(Dist.CLIENT)
 public abstract class AbstractRenderer implements IRenderer {
-    @Getter @Setter protected World world;
-    @Getter @Setter protected WorldRenderer context;
-    @Getter @Setter protected MatrixStack stack;
-    @Getter @Setter protected Matrix4f proMatrix;
-    @Getter @Setter protected float partialTicks;
-    @Getter @Setter protected RendererType type;
-    @Getter @Setter protected boolean enabled;
-    @Getter @Setter protected PlayerEntity player;
-    @Getter @Setter private RenderGameOverlayEvent.ElementType element;
-    @Getter @Setter private MainWindow window;
-    @Getter @Setter private FontRenderer font;
-    @Getter @Setter private int mouseX, mouseY;
+    @Getter @Setter protected RenderType type;
+    @Getter @Setter protected IRenderer parent;
+    @Getter @Setter protected boolean enabled = true;
+    @Getter @Setter private boolean initialized = false;
 
-    public AbstractRenderer(RendererType type) {
+    public AbstractRenderer(RenderType type) {
         this.type = type;
-        this.enabled = true;
-        initialize();
     }
 
-    public AbstractRenderer() {
-        this(RendererType.HUD);
-    }
 
 }

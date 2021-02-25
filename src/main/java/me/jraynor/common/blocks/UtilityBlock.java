@@ -1,17 +1,18 @@
 package me.jraynor.common.blocks;
 
-import me.jraynor.common.containers.UtilityContainer;
+import lombok.SneakyThrows;
+import me.jraynor.client.render.renderer.screens.SingularityScreen;
+import me.jraynor.common.network.Network;
+import me.jraynor.common.network.packets.OpenScreen;
 import me.jraynor.common.tiles.UtilityTile;
 import me.jraynor.core.ModRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -20,11 +21,10 @@ import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.fml.network.NetworkDirection;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import javax.annotation.Nullable;
 
@@ -39,6 +39,7 @@ public class UtilityBlock extends Block {
                 .hardnessAndResistance(2.0f)
                 .setLightLevel(state -> state.get(BlockStateProperties.POWERED) ? 14 : 0)
         );
+        Network.subscribe(this);
     }
 
 
@@ -74,24 +75,27 @@ public class UtilityBlock extends Block {
         if (worldIn.isRemote) return ActionResultType.SUCCESS; // on client side, don't do anything
         if (!(player instanceof ServerPlayerEntity))
             return ActionResultType.FAIL;  // should always be true, but just in case...
-        TileEntity tileEntity = worldIn.getTileEntity(pos);
-        if (tileEntity instanceof UtilityTile) {
-            INamedContainerProvider containerProvider = new INamedContainerProvider() {
-                @Override
-                public ITextComponent getDisplayName() {
-                    return new TranslationTextComponent("screen.mytutorial.firstblock");
-                }
-
-                @Override
-                public Container createMenu(int i, PlayerInventory playerInventory, PlayerEntity playerEntity) {
-                    return new UtilityContainer(i, worldIn, pos, playerInventory);
-                }
-            };
-            NetworkHooks.openGui((ServerPlayerEntity) player, containerProvider, tileEntity.getPos());
+        var tile = worldIn.getTileEntity(pos);
+        if (tile instanceof UtilityTile) {
+            Network.sendToClient(new OpenScreen(pos, ModRegistry.UTILITY_BLOCK_TILE.get()), (ServerPlayerEntity) player);
         } else {
             throw new IllegalStateException("Our named container provider is missing!");
         }
         return ActionResultType.SUCCESS;
+    }
+
+    /**
+     * This will open the given screen
+     *
+     * @param screen the screen to open
+     */
+    @SneakyThrows public void onOpenScreen(OpenScreen screen, NetworkEvent.Context context) {
+        if (context.getDirection() == NetworkDirection.PLAY_TO_CLIENT) {
+            if (screen.getType().equals(ModRegistry.UTILITY_BLOCK_TILE.get())) {
+                Minecraft.getInstance().displayGuiScreen(new SingularityScreen(screen.getTilePos()));
+                context.setPacketHandled(true);
+            }
+        }
     }
 
     @Nullable

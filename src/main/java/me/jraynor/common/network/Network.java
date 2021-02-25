@@ -4,6 +4,9 @@ import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
 import me.jraynor.NoMoreWires;
 import me.jraynor.common.network.packets.*;
+import me.jraynor.core.node.ClientNode;
+import me.jraynor.core.node.INode;
+import me.jraynor.core.node.ServerNode;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -60,6 +63,10 @@ public final class Network {
         registerPacket(LinkStart.class);
         registerPacket(LinkReset.class);
         registerPacket(LinkComplete.class);
+        registerPacket(OpenScreen.class);
+        registerPacket(INode.class);
+        registerPacket(ClientNode.class);
+        registerPacket(ServerNode.class);
     }
 
     /**
