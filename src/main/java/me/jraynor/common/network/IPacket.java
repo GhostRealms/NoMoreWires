@@ -1,5 +1,6 @@
 package me.jraynor.common.network;
 
+import me.jraynor.common.util.TagUtils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;

@@ -3,10 +3,10 @@ package me.jraynor.common.network;
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
 import me.jraynor.NoMoreWires;
+import me.jraynor.old.INode2;
 import me.jraynor.common.network.packets.*;
-import me.jraynor.core.node.ClientNode;
-import me.jraynor.core.node.INode;
-import me.jraynor.core.node.ServerNode;
+import me.jraynor.old.ClientNode;
+import me.jraynor.old.ServerNode;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -23,7 +23,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -64,7 +63,7 @@ public final class Network {
         registerPacket(LinkReset.class);
         registerPacket(LinkComplete.class);
         registerPacket(OpenScreen.class);
-        registerPacket(INode.class);
+        registerPacket(INode2.class);
         registerPacket(ClientNode.class);
         registerPacket(ServerNode.class);
     }

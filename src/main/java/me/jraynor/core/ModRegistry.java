@@ -2,9 +2,9 @@ package me.jraynor.core;
 
 import me.jraynor.NoMoreWires;
 import me.jraynor.common.blocks.UtilityBlock;
-import me.jraynor.common.containers.UtilityContainer;
+//import me.jraynor.common.containers.UtilityContainer;
 import me.jraynor.common.items.SynthesizerItem;
-import me.jraynor.common.tiles.UtilityTile;
+import me.jraynor.common.tiles.SingularityTile;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityType;
 import net.minecraft.inventory.container.ContainerType;
@@ -34,12 +34,12 @@ public class ModRegistry {
      */
     public static final RegistryObject<UtilityBlock> UTILITY_BLOCK = BLOCKS.register("utilityblock", UtilityBlock::new);
     public static final RegistryObject<Item> UTILITY_BLOCK_ITEM = ITEMS.register("utilityblock", () -> new BlockItem(UTILITY_BLOCK.get(), new Item.Properties().group(ItemGroup.MISC)));
-    public static final RegistryObject<TileEntityType<UtilityTile>> UTILITY_BLOCK_TILE = TILES.register("utilityblock", () -> TileEntityType.Builder.create(UtilityTile::new, UTILITY_BLOCK.get()).build(null));
-    public static final RegistryObject<ContainerType<UtilityContainer>> UTILITY_BLOCK_CONTAINER = CONTAINERS.register("utilityblock", () -> IForgeContainerType.create((windowId, inv, data) -> {
-        BlockPos pos = data.readBlockPos();
-        World world = inv.player.getEntityWorld();
-        return new UtilityContainer(windowId, world, pos, inv);
-    }));
+    public static final RegistryObject<TileEntityType<SingularityTile>> UTILITY_BLOCK_TILE = TILES.register("utilityblock", () -> TileEntityType.Builder.create(SingularityTile::new, UTILITY_BLOCK.get()).build(null));
+//    public static final RegistryObject<ContainerType<UtilityContainer>> UTILITY_BLOCK_CONTAINER = CONTAINERS.register("utilityblock", () -> IForgeContainerType.create((windowId, inv, data) -> {
+//        BlockPos pos = data.readBlockPos();
+//        World world = inv.player.getEntityWorld();
+//        return new UtilityContainer(windowId, world, pos, inv);
+//    }));
 
     /**
      * ============== synthesizer item start =============

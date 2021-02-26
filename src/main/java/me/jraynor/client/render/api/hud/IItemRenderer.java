@@ -6,7 +6,6 @@ import net.minecraft.item.ItemStack;
 
 public interface IItemRenderer extends IRenderer {
 
-
     /**
      * This will render a item at the given position
      */

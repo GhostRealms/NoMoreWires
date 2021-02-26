@@ -3,6 +3,7 @@ package me.jraynor.common.network.packets;
 import me.jraynor.common.data.IOMode;
 import me.jraynor.common.data.TransferMode;
 import me.jraynor.common.network.IPacket;
+import me.jraynor.common.util.TagUtils;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
 
@@ -109,7 +110,7 @@ public class TransferData implements IPacket {
      * @param tag the compound to write to
      * @return the passed compound instance
      */
-    @Override public CompoundNBT write(CompoundNBT tag) {
+    @Override public net.minecraft.nbt.CompoundNBT write(CompoundNBT tag) {
         this.data.forEach((direction, map) -> tag.putIntArray(direction.name(), convertMapToIntArray(map)));
         return tag;
     }

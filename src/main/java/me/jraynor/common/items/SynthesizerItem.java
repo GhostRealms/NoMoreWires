@@ -6,7 +6,7 @@ import me.jraynor.common.data.LinkData;
 import me.jraynor.common.data.TransferMode;
 import me.jraynor.common.network.Network;
 import me.jraynor.common.network.packets.*;
-import me.jraynor.common.tiles.UtilityTile;
+import me.jraynor.common.tiles.SingularityTile;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
@@ -118,9 +118,9 @@ public class SynthesizerItem extends Item {
      */
     private void writeLink(BlockPos pos, Direction side, ItemStack stack, TileEntity tile, World world, ServerPlayerEntity player) {
         var newLink = new LinkData(pos, side, transferMode, operation);
-        if (LinkData.isLinked(stack) && tile instanceof UtilityTile) {
+        if (LinkData.isLinked(stack) && tile instanceof SingularityTile) {
             var oldLink = LinkData.read(stack);
-            var utilityTile = (UtilityTile) tile;
+            var utilityTile = (SingularityTile) tile;
             assert oldLink != null;
             utilityTile.onLink(newLink, oldLink);
             Network.sendToClient(new LinkComplete(oldLink.getPos(), newLink.getPos(), oldLink.getSide(), newLink.getSide()), player);
@@ -128,7 +128,7 @@ public class SynthesizerItem extends Item {
             var state = world.getBlockState(oldLink.getPos());
             player.sendStatusMessage(new StringTextComponent(TextFormatting.GREEN + "completed" + TextFormatting.WHITE + " link with: " + TextFormatting.LIGHT_PURPLE + TextFormatting.UNDERLINE + state.getBlock().getTranslatedName().getString() + TextFormatting.WHITE + " at " + side.name().toLowerCase() + ", " + TextFormatting.GOLD + pos.getCoordinatesAsString()), true);
         }
-        if (!LinkData.isLinked(stack) && !(tile instanceof UtilityTile)) {
+        if (!LinkData.isLinked(stack) && !(tile instanceof SingularityTile)) {
             newLink.write(stack);
             var state = world.getBlockState(pos);
             Network.sendToClient(new LinkStart(newLink.getPos(), newLink.getSide(), newLink.getOperation()), player);
@@ -151,7 +151,7 @@ public class SynthesizerItem extends Item {
             if (Screen.hasShiftDown()) {
                 list.add(new StringTextComponent(" - " + TextFormatting.DARK_GRAY + "Position: " + TextFormatting.DARK_PURPLE + "[" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + "]"));
                 list.add(new StringTextComponent(" - " + TextFormatting.DARK_GRAY + "Transfer: " + TextFormatting.DARK_PURPLE + data.getType().name().toLowerCase()));
-                list.add(new StringTextComponent(" - " + TextFormatting.DARK_GRAY + "Operation: " + TextFormatting.DARK_PURPLE + data.getOperation().name().toLowerCase()));
+                list.add(new StringTextComponent(" - " + TextFormatting.DARK_GRAY + "IOperation: " + TextFormatting.DARK_PURPLE + data.getOperation().name().toLowerCase()));
                 list.add(new StringTextComponent(" - " + TextFormatting.DARK_GRAY + "Face: " + TextFormatting.DARK_PURPLE + side.name().toLowerCase()));
             }
         }

@@ -2,16 +2,15 @@ package me.jraynor.client.render.renderer.screens;
 
 import com.mojang.datafixers.util.Pair;
 import lombok.Getter;
+import me.jraynor.api.link.LinkClient;
+import me.jraynor.api.manager.NodeManager;
+import me.jraynor.api.node.ClientNode;
+import me.jraynor.common.tiles.SingularityTile;
+import me.jraynor.old.INode2;
 import me.jraynor.client.render.api.AbstractScreenRenderer;
-import me.jraynor.client.render.api.hud.IInputEvents;
 import me.jraynor.client.render.api.hud.IRenderer2d;
 import me.jraynor.client.render.api.hud.ITransform;
 import me.jraynor.client.render.api.hud.ITextureHolder;
-import me.jraynor.common.tiles.UtilityTile;
-import me.jraynor.core.node.ClientNode;
-import me.jraynor.common.data.TransferMode;
-import me.jraynor.core.node.INode;
-import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -28,7 +27,7 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
     @Getter private int y = 20, width = 256, height = 205;
     @Getter private final BlockPos pos;
     @Getter private final Map<String, Pair<ResourceLocation, Pair<Integer, Integer>>> textures = new HashMap<>();
-    private final Set<INode> hovered = new HashSet<>();
+    private final Set<INode2> hovered = new HashSet<>();
 
     public SingularityScreen(BlockPos pos) {
         super(new TranslationTextComponent("screen.nmw.singularity"));
@@ -48,9 +47,13 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
      * It will check to see if they're client nodes, and if they are it'll render them.
      */
     @Override public void tick() {
-        var tile = getTile();
-        if (tile != null)
-            tile.getRootNodes().forEach(iNode -> {
+        super.tick();
+        /**
+         * This will iterate over all of the nodes
+         * on the client
+         */
+        if (getManager() != null)
+            getManager().getAllNodes().forEach((uuid, iNode) -> {
                 if (iNode instanceof ClientNode) {
                     var clientNode = (ClientNode) iNode;
                     clientNode.setParent(this);
@@ -59,7 +62,6 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
                     clientNode.tick();
                 }
             });
-        super.tick();
     }
 
     /**
@@ -68,21 +70,21 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
     @Override protected void subscribe() {
         super.subscribe();
         Consumer<InputEvent.KeyInputEvent> onKey = (event) -> {
-            if (getTile() != null)
-                getTile().getRootNodes().forEach(iNode -> {
+            if (getManager() != null)
+                getManager().getAllNodes().forEach((uuid, iNode) -> {
                     if (iNode instanceof ClientNode) {
-                        var node = (ClientNode) iNode;
-                        node.onKey(event);
+                        var clientNode = (ClientNode) iNode;
+                        clientNode.onKey(event);
                     }
                 });
         };
         MinecraftForge.EVENT_BUS.addListener(onKey);
         Consumer<InputEvent.MouseInputEvent> onMouse = (event) -> {
-            if (getTile() != null)
-                getTile().getRootNodes().forEach(iNode -> {
+            if (getManager() != null)
+                getManager().getAllNodes().forEach((uuid, iNode) -> {
                     if (iNode instanceof ClientNode) {
-                        var node = (ClientNode) iNode;
-                        node.onMouse(event);
+                        var clientNode = (ClientNode) iNode;
+                        clientNode.onMouse(event);
                     }
                 });
         };
@@ -92,15 +94,7 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
     /**
      * This will recursivley get everything hovered
      */
-    public Collection<INode> getHovered() {
-        getTile().getRootNodes().forEach(iNode -> {
-            if (iNode instanceof ClientNode) {
-                var node = (ClientNode) iNode;
-                if (node.isHovered()) hovered.add(node);
-                else hovered.remove(node);
-                node.appendHovered(hovered);
-            }
-        });
+    public Collection<INode2> getHovered() {
         return hovered;
     }
 
@@ -109,13 +103,14 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
      */
     @Override public void render() {
         drawBackground();
-        getTile().getRootNodes().forEach(iNode -> {
-            if (iNode instanceof ClientNode) {
-                var clientNode = (ClientNode) iNode;
-                if (clientNode.isInitialized())
+        if (getManager() != null) {
+            getManager().getAllNodes().forEach((uuid, iNode) -> {
+                if (iNode instanceof ClientNode) {
+                    var clientNode = (ClientNode) iNode;
                     clientNode.render();
-            }
-        });
+                }
+            });
+        }
         super.render();
     }
 
@@ -137,8 +132,17 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
     /**
      * @return the utility tile entity at the given position
      */
-    public UtilityTile getTile() {
-        return (UtilityTile) ctx().getWorld().getTileEntity(pos);
+    public SingularityTile getTile() {
+        if (ctx().getWorld() == null) return null;
+        return (SingularityTile) ctx().getWorld().getTileEntity(pos);
+    }
+
+    /**
+     * @return the node manager
+     */
+    private NodeManager getManager() {
+        if (getTile() == null) return null;
+        return getTile().getManager();
     }
 
 }

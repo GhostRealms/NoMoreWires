@@ -4,7 +4,8 @@ import lombok.SneakyThrows;
 import me.jraynor.client.render.renderer.screens.SingularityScreen;
 import me.jraynor.common.network.Network;
 import me.jraynor.common.network.packets.OpenScreen;
-import me.jraynor.common.tiles.UtilityTile;
+//import me.jraynor.common.tiles.UtilityTile;
+import me.jraynor.common.tiles.SingularityTile;
 import me.jraynor.core.ModRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -76,7 +77,7 @@ public class UtilityBlock extends Block {
         if (!(player instanceof ServerPlayerEntity))
             return ActionResultType.FAIL;  // should always be true, but just in case...
         var tile = worldIn.getTileEntity(pos);
-        if (tile instanceof UtilityTile) {
+        if (tile instanceof SingularityTile) {
             Network.sendToClient(new OpenScreen(pos, ModRegistry.UTILITY_BLOCK_TILE.get()), (ServerPlayerEntity) player);
         } else {
             throw new IllegalStateException("Our named container provider is missing!");

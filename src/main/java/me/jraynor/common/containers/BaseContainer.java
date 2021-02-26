@@ -1,6 +1,5 @@
 package me.jraynor.common.containers;
 
-import me.jraynor.common.util.ChestContents;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.ContainerType;

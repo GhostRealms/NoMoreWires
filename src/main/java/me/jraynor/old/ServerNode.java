@@ -1,4 +1,4 @@
-package me.jraynor.core.node;
+package me.jraynor.old;
 
 import com.google.common.collect.Maps;
 import lombok.Getter;
@@ -9,7 +9,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -17,18 +16,18 @@ import java.util.Objects;
  * This represents the node on the server. It will be save to the tile in the future,
  * and be used in the tile to send/receive items
  */
-public class ServerNode implements INode {
+public class ServerNode implements INode2 {
     @Getter @Setter private BlockPos pos;
     @Getter @Setter private Direction dir;
     @Getter @Setter private TransferMode mode;
-    @Getter private Class<? extends INode> nodeType = ServerNode.class;
-    @Getter @Setter private Map<IOMode, Collection<INode>> linkedNodes = Maps.newHashMap();
+    @Getter private Class<? extends INode2> nodeType = ServerNode.class;
+    @Getter @Setter private Map<IOMode, Collection<INode2>> linkedNodes = Maps.newHashMap();
     @Getter @Setter private boolean written = false;
 
     @Override public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null) return false;
-        INode other = (INode) o;
+        INode2 other = (INode2) o;
         return other.matches(this);
     }
 

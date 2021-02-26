@@ -1,6 +1,7 @@
 package me.jraynor.common.data;
 
-import me.jraynor.common.tiles.UtilityTile;
+//import me.jraynor.common.tiles.UtilityTile;
+import me.jraynor.common.tiles.SingularityTile;
 import me.jraynor.core.ModRegistry;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
@@ -90,7 +91,7 @@ public class LinkData {
         var state = world.getBlockState(pos);
         if (!state.hasTileEntity()) return false;
         var tile = world.getTileEntity(pos);
-        if (tile instanceof UtilityTile) return true;
+        if (tile instanceof SingularityTile) return true;
         switch (mode) {
             case ITEMS -> {
                 var capability = tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, face);

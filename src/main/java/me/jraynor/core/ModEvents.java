@@ -1,7 +1,7 @@
 package me.jraynor.core;
 
 import me.jraynor.NoMoreWires;
-import me.jraynor.client.render.renderer.screens.UtilityScreen;
+//import me.jraynor.client.render.renderer.screens.UtilityScreen;
 import me.jraynor.common.network.Network;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraftforge.api.distmarker.Dist;
@@ -34,7 +34,7 @@ public class ModEvents {
      */
     @SubscribeEvent public static void onClientInit(final FMLClientSetupEvent event) {
 //        ScreenManager.registerFactory(ModRegistry.UTILITY_BLOCK_CONTAINER.get(), SingularityScreen::new);
-        ScreenManager.registerFactory(ModRegistry.UTILITY_BLOCK_CONTAINER.get(), UtilityScreen::new);
+//        ScreenManager.registerFactory(ModRegistry.UTILITY_BLOCK_CONTAINER.get(), UtilityScreen::new);
         NoMoreWires.logger.debug("Initialized client");
     }
 

@@ -1,4 +1,4 @@
-package me.jraynor.core.node;
+package me.jraynor.old;
 
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
@@ -14,16 +14,12 @@ import me.jraynor.client.render.api.hud.ITextureHolder;
 import me.jraynor.client.render.renderer.screens.SingularityScreen;
 import me.jraynor.common.data.IOMode;
 import me.jraynor.common.data.TransferMode;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.fml.network.NetworkDirection;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -33,7 +29,7 @@ import java.util.*;
  * it is rendered as the 3d model of the block that it's linked to.
  * You can drag nodes together to connect them.
  */
-public class ClientNode extends AbstractRenderer implements INode, ITextureHolder, IAbsorbable, ITransform, IInputEvents, IRenderer2d {
+public class ClientNode extends AbstractRenderer implements INode2, ITextureHolder, IAbsorbable, ITransform, IInputEvents, IRenderer2d {
     /*==================== Render related =====================*/
     @Getter private int width = 16, height = 16;
     @Getter private final Map<String, Pair<ResourceLocation, Pair<Integer, Integer>>> textures = new HashMap<>();
@@ -42,12 +38,12 @@ public class ClientNode extends AbstractRenderer implements INode, ITextureHolde
     private int offsetX = 0, offsetY = 0;
     private boolean shiftDown = false;
     private boolean linking = false;
-    /*==================== INode related =====================*/
+    /*==================== INode2 related =====================*/
     @Getter @Setter private Direction dir;
     @Getter @Setter private TransferMode mode;
     @Getter @Setter private BlockPos pos;
-    @Getter private final Class<? extends INode> nodeType = ClientNode.class;
-    @Getter @Setter private Map<IOMode, Collection<INode>> linkedNodes = Maps.newHashMap();
+    @Getter private final Class<? extends INode2> nodeType = ClientNode.class;
+    @Getter @Setter private Map<IOMode, Collection<INode2>> linkedNodes = Maps.newHashMap();
     @Getter @Setter private boolean written = false;
 
     /*========================================================*/
@@ -81,7 +77,7 @@ public class ClientNode extends AbstractRenderer implements INode, ITextureHolde
     /**
      * This will recursively update all of the hovered nodes
      */
-    public void appendHovered(Set<INode> hovered) {
+    public void appendHovered(Set<INode2> hovered) {
         this.getLinkedNodes().values().forEach(nodes -> nodes.forEach(iNode -> {
             if (iNode instanceof ClientNode) {
                 var node = (ClientNode) iNode;
@@ -95,17 +91,17 @@ public class ClientNode extends AbstractRenderer implements INode, ITextureHolde
     /**
      * This will attempt to add links to the hovered node
      */
-    private void addLinks(Collection<INode> hovered) {
-        hovered.forEach(iNode -> {
-            if (iNode instanceof ClientNode) {
-                var node = (ClientNode) iNode;
-                System.out.println("Found linkable node: " + node);
-                addLink(IOMode.EXTRACT, node);
-                if (getParent() != null) {
-                    ((SingularityScreen) getParent()).getTile().syncNodes(NetworkDirection.PLAY_TO_SERVER);
-                }
-            }
-        });
+    private void addLinks(Collection<INode2> hovered) {
+//        hovered.forEach(iNode -> {
+//            if (iNode instanceof ClientNode) {
+//                var node = (ClientNode) iNode;
+//                System.out.println("Found linkable node: " + node);
+//                addLink(IOMode.EXTRACT, node);
+//                if (getParent() != null) {
+//                    ((SingularityScreen) getParent()).getTile().syncNodes(NetworkDirection.PLAY_TO_SERVER);
+//                }
+//            }
+//        });
     }
 
     /**
@@ -186,7 +182,7 @@ public class ClientNode extends AbstractRenderer implements INode, ITextureHolde
     @Override public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null) return false;
-        INode other = (INode) o;
+        INode2 other = (INode2) o;
         return other.matches(this);
     }
 
