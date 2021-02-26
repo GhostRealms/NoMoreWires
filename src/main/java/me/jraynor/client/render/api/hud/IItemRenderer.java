@@ -10,10 +10,12 @@ public interface IItemRenderer extends IRenderer {
      * This will render a item at the given position
      */
     default void drawItem(ItemStack itemStack, int x, int y) {
+        RenderSystem.disableDepthTest();
         RenderSystem.pushMatrix();
         ctx().getItemRenderer().renderItemAndEffectIntoGUI(itemStack, x, y);
         ctx().getItemRenderer().renderItemOverlayIntoGUI(ctx().getFont(), itemStack, x, y, "");
         RenderSystem.popMatrix();
+        RenderSystem.enableDepthTest();
     }
 
 

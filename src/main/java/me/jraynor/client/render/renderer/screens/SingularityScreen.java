@@ -16,6 +16,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.MinecraftForge;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -38,7 +39,8 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
     /**
      * This will be called whenever the renderer starts.
      */
-    @Override public void initialize() {
+    @Override
+    public void initialize() {
         addTexture("bg", "textures/gui/bg.png", 256, 256);
     }
 
@@ -46,7 +48,8 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
      * This will loop over all of the root nodes inside the tile.
      * It will check to see if they're client nodes, and if they are it'll render them.
      */
-    @Override public void tick() {
+    @Override
+    public void tick() {
         super.tick();
         /**
          * This will iterate over all of the nodes
@@ -65,11 +68,21 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
     }
 
     /**
+     * Here we add a new extract operation of e is pressed
+     *
+     * @param event the event
+     */
+    private void onKey(InputEvent.KeyInputEvent event) {
+    }
+
+    /**
      * Here we add some subscribers for the root noddes.
      */
-    @Override protected void subscribe() {
+    @Override
+    protected void subscribe() {
         super.subscribe();
         Consumer<InputEvent.KeyInputEvent> onKey = (event) -> {
+            onKey(event);
             if (getManager() != null)
                 getManager().getAllNodes().forEach((uuid, iNode) -> {
                     if (iNode instanceof ClientNode) {
@@ -101,7 +114,8 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
     /**
      * Here we want render all of the children
      */
-    @Override public void render() {
+    @Override
+    public void render() {
         drawBackground();
         if (getManager() != null) {
             getManager().getAllNodes().forEach((uuid, iNode) -> {
@@ -111,7 +125,21 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
                 }
             });
         }
+        drawToolTips();
         super.render();
+    }
+
+    private void drawToolTips() {
+        if (getManager() != null) {
+            for (var iNode : getManager().getAllNodes().values()) {
+                if (iNode instanceof ClientNode) {
+                    var clientNode = (ClientNode) iNode;
+                    if (clientNode.isHovered())
+                        clientNode.drawToolTip(clientNode.getTextCache());
+                }
+            }
+        }
+
     }
 
     /**

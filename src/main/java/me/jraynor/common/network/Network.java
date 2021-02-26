@@ -66,6 +66,8 @@ public final class Network {
         registerPacket(INode2.class);
         registerPacket(ClientNode.class);
         registerPacket(ServerNode.class);
+        registerPacket(AddNode.class);
+        registerPacket(AddLink.class);
     }
 
     /**

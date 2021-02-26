@@ -1,5 +1,6 @@
 package me.jraynor.api.node;
 
+import me.jraynor.api.manager.NodeManager;
 import me.jraynor.api.serialize.ITaggable;
 import me.jraynor.api.util.NodeType;
 import me.jraynor.common.util.TagUtils;
@@ -20,6 +21,7 @@ public interface INode extends ITaggable {
      */
     void setFrom(Optional<UUID> from);
 
+    void setManager(NodeManager manager);
 
     /**
      * This is the parent. If it's not present

@@ -36,7 +36,6 @@ public class NodePath implements ITaggable {
         manager.allNodes.put(headNode.getUuid().get(), headNode);
     }
 
-
     /**
      * This will insert the toInsert node into the afterNode, and sete the afterNode to toInsert's after
      *

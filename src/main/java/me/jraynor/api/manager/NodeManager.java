@@ -7,8 +7,12 @@ import me.jraynor.api.link.ILink;
 import me.jraynor.api.link.LinkClient;
 import me.jraynor.api.link.LinkServer;
 import me.jraynor.api.node.INode;
+import me.jraynor.api.operation.extract.ExtractOperationClient;
+import me.jraynor.api.operation.extract.ExtractOperationServer;
 import me.jraynor.api.operation.OperationClient;
 import me.jraynor.api.operation.OperationServer;
+import me.jraynor.api.operation.insert.InsertOperationClient;
+import me.jraynor.api.operation.insert.InsertOperationServer;
 import me.jraynor.api.serialize.ITaggable;
 import me.jraynor.api.util.NodeType;
 import me.jraynor.common.util.TagUtils;
@@ -42,6 +46,7 @@ public final class NodeManager implements ITaggable {
     public UUID add(INode node) {
         if (node.getUuid().isEmpty())
             node.setUuid(Optional.of(UUID.randomUUID()));
+        node.setManager(this);
         allNodes.put(node.getUuid().get(), node);
         return node.getUuid().get();
     }
@@ -56,6 +61,7 @@ public final class NodeManager implements ITaggable {
         if (link.getUuid().isEmpty())
             link.setUuid(Optional.of(UUID.randomUUID()));
         if (!nodePaths.containsKey(link.getUuid().get())) {
+            link.setManager(this);
             nodePaths.put(link.getUuid().get(), new NodePath(link, this));
             log.debug("Added new link: " + link.getUuid().toString());
             return link.getUuid();
@@ -65,12 +71,25 @@ public final class NodeManager implements ITaggable {
     }
 
     /**
+     * This will add a new link from the from to the to
+     */
+    public void addLink(UUID from, UUID to) {
+        var fromNode = getAllNodes().get(from);
+        var toNode = getAllNodes().get(to);
+        if (fromNode.getTo().isPresent()) {
+            toNode.setTo(fromNode.getTo());
+        }
+        fromNode.setTo(toNode.getUuid());
+    }
+
+    /**
      * THis will write a mod tag
      *
      * @param tag the mod tag
      * @return the inputted mod tag
      */
-    @Override public CompoundNBT write(CompoundNBT tag) {
+    @Override
+    public CompoundNBT write(CompoundNBT tag) {
         //We want to write all of the nodes.
         var types = new CompoundNBT();
         allNodes.forEach((uuid, iNode) -> {
@@ -95,7 +114,8 @@ public final class NodeManager implements ITaggable {
      *
      * @param tag the mod tag
      */
-    @Override public void read(CompoundNBT tag) {
+    @Override
+    public void read(CompoundNBT tag) {
         System.out.println("Starting to read tag: " + tag);
         var headsSize = tag.getInt("node_head_size");
         var nodeIds = new HashSet<UUID>();
@@ -126,15 +146,22 @@ public final class NodeManager implements ITaggable {
                 else
                     node = new LinkServer();
             }
-            case OPERATION -> {
+            case EXTRACT_OP -> {
                 if (dist.isClient())
-                    node = new OperationClient();
+                    node = new ExtractOperationClient();
                 else
-                    node = new OperationServer();
+                    node = new ExtractOperationServer();
+            }
+            case INSERT_OP -> {
+                if (dist.isClient())
+                    node = new InsertOperationClient();
+                else
+                    node = new InsertOperationServer();
             }
         }
         var nodeTag = (CompoundNBT) tag.get(uuid.toString());
         if (node == null || nodeTag == null) return null;
+        node.setManager(this);
         node.read(nodeTag);
         return node;
     }

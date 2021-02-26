@@ -1,10 +1,14 @@
 package me.jraynor.common.tiles;
 
 import lombok.Getter;
+import me.jraynor.api.link.ILink;
 import me.jraynor.api.link.LinkServer;
 import me.jraynor.api.manager.NodeManager;
+import me.jraynor.api.util.NodeType;
 import me.jraynor.common.data.LinkData;
 import me.jraynor.common.network.Network;
+import me.jraynor.common.network.packets.AddLink;
+import me.jraynor.common.network.packets.AddNode;
 import me.jraynor.common.util.TagUtils;
 import me.jraynor.core.ModRegistry;
 import net.minecraft.block.BlockState;
@@ -19,6 +23,8 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.network.NetworkDirection;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -38,6 +44,29 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
 
     /**
      * This method is what will end up linking the blocks. It is called from the synthesizer item.
+     */
+    public void onNodeAdd(AddNode self, NetworkEvent.Context ctx) {
+        if (ctx.getDirection() == NetworkDirection.PLAY_TO_SERVER) {
+            if (self.getNode().getNodeType() == NodeType.LINK)
+                manager.addLink((ILink) self.getNode());
+            else
+                manager.add(self.getNode());
+            sync();
+        }
+    }
+
+    /**
+     * This method is what will end up linking the blocks. It is called from the synthesizer item.
+     */
+    public void onLinkAdd(AddLink self, NetworkEvent.Context ctx) {
+        if (ctx.getDirection() == NetworkDirection.PLAY_TO_SERVER) {
+            manager.addLink(self.getAfterNode(), self.getToNode());
+            sync();
+        }
+    }
+
+    /**
+     * This method is what will end up linking the blocks. It is called from the synthesizer item.
      *
      * @param other the block to link to this
      * @param self  a link data of this
@@ -45,7 +74,7 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
     public void onLink(LinkData self, LinkData other) {
         var newLink = new LinkServer();
         newLink.setPos(other.getPos());
-        newLink.setFace(self.getSide());
+        newLink.setFace(other.getSide());
         if (manager.addLink(newLink).isPresent()) {
             sync();
         }
@@ -74,7 +103,8 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
     /**
      * Called 20 times per second on the client and server
      */
-    @Override public void tick() {
+    @Override
+    public void tick() {
         doSync();
     }
 
@@ -82,7 +112,8 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
     /**
      * Removes all the tile data from the world, also used for de initialization.
      */
-    @Override public void remove() {
+    @Override
+    public void remove() {
         super.remove();
         Network.unsubscribe(this); //Can't forget to unsubscribe or it can cause a memory leak.
     }
@@ -93,7 +124,8 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
      * @param state the state of the block
      * @param tag   the tag to read from
      */
-    @Override public void read(BlockState state, CompoundNBT tag) {
+    @Override
+    public void read(BlockState state, CompoundNBT tag) {
         super.read(state, tag);
         manager.read(tag);
     }
@@ -103,7 +135,8 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
      *
      * @param tag the tag
      */
-    @Override public CompoundNBT write(CompoundNBT tag) {
+    @Override
+    public CompoundNBT write(CompoundNBT tag) {
         super.write(tag);
         manager.write(tag);
         return tag;
@@ -113,7 +146,9 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
      * Retrieves packet to send to the client whenever this Tile Entity is resynced via World.notifyBlockUpdate. For
      * modded TE's, this packet comes back to you clientside in {@link #onDataPacket}
      */
-    @Nullable @Override public SUpdateTileEntityPacket getUpdatePacket() {
+    @Nullable
+    @Override
+    public SUpdateTileEntityPacket getUpdatePacket() {
         return new SUpdateTileEntityPacket(this.pos, 1, this.getUpdateTag());
     }
 
@@ -121,7 +156,8 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
      * Get an NBT compound to sync to the client with SPacketChunkData, used for initial loading of the chunk or when
      * many blocks change at once. This compound comes back to you clientside
      */
-    @Override public CompoundNBT getUpdateTag() {
+    @Override
+    public CompoundNBT getUpdateTag() {
         return this.write(new CompoundNBT());
     }
 
@@ -137,7 +173,9 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
      * Gets the capbility. This is used for allowing easy accesses between other mods that use item handlers,
      * energy handlers etc.
      */
-    @Nonnull @Override public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
+    @Nonnull
+    @Override
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
         return super.getCapability(cap, side);
     }
 

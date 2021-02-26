@@ -2,6 +2,7 @@ package me.jraynor.api.operation;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.jraynor.api.manager.NodeManager;
 import me.jraynor.api.node.INode;
 import me.jraynor.api.util.NodeType;
 
@@ -12,17 +13,15 @@ import java.util.UUID;
 /**
  * This represents a renderable operation that can be applied to and from nodes
  */
-public class OperationServer implements IOperation {
+public abstract class OperationServer implements IOperation {
     @Getter @Setter private Optional<UUID> from = Optional.empty(), to = Optional.empty();
     @Getter @Setter private Optional<UUID> uuid = Optional.empty();
-    @Getter private NodeType nodeType = NodeType.OPERATION;
+    @Setter protected NodeManager manager;
 
     /**
      * This is called when the operation is executed on the server
      */
-    @Override public void execute() {
-
-    }
+    @Override public void execute() {}
 
     @Override public boolean equals(Object o) {
         if (this == o) return true;

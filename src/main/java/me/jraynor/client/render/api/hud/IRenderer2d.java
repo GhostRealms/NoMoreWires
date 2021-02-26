@@ -1,11 +1,27 @@
 package me.jraynor.client.render.api.hud;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
+import me.jraynor.client.render.api.AbstractRenderer;
 import me.jraynor.client.render.api.core.IRenderer;
+import me.jraynor.client.util.RenderTypes;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.dispenser.IPosition;
+import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.util.math.vector.Vector3i;
+import net.minecraft.util.text.Color;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.ITextProperties;
 import org.lwjgl.opengl.GL11;
+
+import java.util.List;
 
 /**
  * This will allow for the rendering of basic shapes in the world.
@@ -33,6 +49,39 @@ public interface IRenderer2d extends IRenderer, ITextureHolder, IItemRenderer {
         }
     }
 
+    /**
+     * This will render all of the text properties
+     *
+     * @param text
+     */
+    default void drawToolTip(List<ITextProperties> text) {
+        net.minecraftforge.fml.client.gui.GuiUtils.drawHoveringText(ctx().getStack(), text, ctx().getMouseX(), ctx().getMouseY(), ctx().getWindow().getScaledWidth(), ctx().getWindow().getScaledHeight(), -1, ctx().getFont());
+    }
+
+    /**
+     * This will draw a quad of the given color
+     */
+    default void drawQuad(int x, int y, int width, int height, Vector3i color) {
+        var right = x + width;
+        var left = x;
+        var top = y;
+        var bottom = y + height;
+        var buffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
+        var builder = buffer.getBuffer(RenderTypes.COLORED_QUAD);
+        RenderSystem.disableDepthTest();
+        var matrixPos = ctx().getStack().getLast().getMatrix();
+        ctx().getStack().push();
+        {
+            builder.pos(matrixPos, right, top, 70).color(color.getX(), color.getY(), color.getZ(), 255).endVertex();
+            builder.pos(matrixPos, left, top, 70).color(color.getX(), color.getY(), color.getZ(), 255).endVertex();
+            builder.pos(matrixPos, left, bottom, 70).color(color.getX(), color.getY(), color.getZ(), 255).endVertex();
+            builder.pos(matrixPos, right, bottom, 70).color(color.getX(), color.getY(), color.getZ(), 255).endVertex();
+        }
+        ctx().getStack().pop();
+        RenderSystem.enableDepthTest();
+        buffer.finish();
+
+    }
 
     /**
      * This will draw a texture at the given position on screen with the given offsets.
@@ -45,31 +94,19 @@ public interface IRenderer2d extends IRenderer, ITextureHolder, IItemRenderer {
      * This will draw a quad of the given color at the given position with the given size
      */
     default void drawLine(int startX, int startY, int stopX, int stopY, int width, Vector3i color) {
-//        ctx().getStack().push();
-//        var buffer = ctx().getBuilder(RenderType.LINES);
-//        buffer.pos(ctx().getStack().getLast().getMatrix(), (float) startX, (float) startY, 32f)
-//                .color(color.getX(), color.getX(), color.getZ(), 255);
-//        buffer.pos(ctx().getStack().getLast().getMatrix(), (float) stopX, (float) stopY, 32f)
-//                .color(color.getX(), color.getX(), color.getZ(), 255);
-//        ctx().getStack().pop();
-        GL11.glPushMatrix();
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glEnable(GL11.GL_LINE_SMOOTH);
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        GL11.glDisable(GL11.GL_TEXTURE_2D);
-        GL11.glBlendFunc(770, 771);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glLineWidth(width);
-        GL11.glColor4f(color.getX() / 255.0f, color.getY() / 255.0f, color.getZ() / 255.0f, 1.0f);
-        GL11.glBegin(2);
-        GL11.glVertex2d(startX, startY);
-        GL11.glVertex2d(stopX, stopY);
-        GL11.glEnd();
-        GL11.glDisable(GL11.GL_BLEND);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glDisable(GL11.GL_LINE_SMOOTH);
-        GL11.glDisable(GL11.GL_BLEND);
-        GL11.glPopMatrix();
+        var buffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
+        var builder = buffer.getBuffer(RenderType.getLines());
+        RenderSystem.disableDepthTest();
+        var matrixPos = ctx().getStack().getLast().getMatrix();
+        ctx().getStack().push();
+        builder.pos(matrixPos, (float) startX, (float) startY, 32f)
+                .color(color.getX(), color.getX(), color.getZ(), 255)
+                .endVertex();
+        builder.pos(matrixPos, (float) stopX, (float) stopY, 32f)
+                .color(color.getX(), color.getX(), color.getZ(), 255)
+                .endVertex();
+        ctx().getStack().pop();
+        RenderSystem.enableDepthTest();
+        buffer.finish();
     }
 }

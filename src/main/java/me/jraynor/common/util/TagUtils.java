@@ -25,8 +25,8 @@ public final class TagUtils {
     public static void writeBlockPos(net.minecraft.nbt.CompoundNBT tag, String name, BlockPos pos) {
         var posTag = new net.minecraft.nbt.CompoundNBT();
         posTag.putInt("x", pos.getX());
-        posTag.putInt("y", pos.getX());
-        posTag.putInt("z", pos.getX());
+        posTag.putInt("y", pos.getY());
+        posTag.putInt("z", pos.getZ());
         tag.put(name, posTag);
         log.info("wrote block position");
     }

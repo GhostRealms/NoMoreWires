@@ -2,6 +2,7 @@ package me.jraynor.api.link;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.jraynor.api.manager.NodeManager;
 import me.jraynor.api.node.ClientNode;
 import me.jraynor.api.node.INode;
 import me.jraynor.api.node.ServerNode;
@@ -18,7 +19,7 @@ public class LinkServer extends ServerNode implements ILink {
     @Getter @Setter private Direction face;
     @Getter @Setter private BlockPos pos;
     @Getter private NodeType nodeType = NodeType.LINK;
-
+    @Setter protected NodeManager manager;
 
 
     @Override public boolean equals(Object o) {
