@@ -27,6 +27,7 @@ import java.util.List;
  * This will allow for the rendering of basic shapes in the world.
  */
 public interface IRenderer2d extends IRenderer, ITextureHolder, IItemRenderer {
+
     /**
      * This will draw a texture at the given position on screen with the given offsets.
      */
@@ -61,26 +62,12 @@ public interface IRenderer2d extends IRenderer, ITextureHolder, IItemRenderer {
     /**
      * This will draw a quad of the given color
      */
-    default void drawQuad(int x, int y, int width, int height, Vector3i color) {
-        var right = x + width;
-        var left = x;
-        var top = y;
-        var bottom = y + height;
-        var buffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
-        var builder = buffer.getBuffer(RenderTypes.COLORED_QUAD);
+    default void drawQuad(int x, int y, int width, int height, int color) {
         RenderSystem.disableDepthTest();
-        var matrixPos = ctx().getStack().getLast().getMatrix();
         ctx().getStack().push();
-        {
-            builder.pos(matrixPos, right, top, 70).color(color.getX(), color.getY(), color.getZ(), 255).endVertex();
-            builder.pos(matrixPos, left, top, 70).color(color.getX(), color.getY(), color.getZ(), 255).endVertex();
-            builder.pos(matrixPos, left, bottom, 70).color(color.getX(), color.getY(), color.getZ(), 255).endVertex();
-            builder.pos(matrixPos, right, bottom, 70).color(color.getX(), color.getY(), color.getZ(), 255).endVertex();
-        }
-        ctx().getStack().pop();
+        AbstractGui.fill(ctx().getStack(), x, y, x + width, y + height, color);
         RenderSystem.enableDepthTest();
-        buffer.finish();
-
+        ctx().getStack().pop();
     }
 
     /**
@@ -93,7 +80,15 @@ public interface IRenderer2d extends IRenderer, ITextureHolder, IItemRenderer {
     /**
      * This will draw a quad of the given color at the given position with the given size
      */
-    default void drawLine(int startX, int startY, int stopX, int stopY, int width, Vector3i color) {
+    default void drawLine(int startX, int startY, int stopX, int stopY, Vector3i color) {
+        drawLine(startX, startY, stopX, stopY, color, color);
+    }
+
+
+    /**
+     * This will draw a quad of the given color at the given position with the given size
+     */
+    default void drawLine(int startX, int startY, int stopX, int stopY, Vector3i color, Vector3i stopColor) {
         var buffer = Minecraft.getInstance().getRenderTypeBuffers().getBufferSource();
         var builder = buffer.getBuffer(RenderType.getLines());
         RenderSystem.disableDepthTest();
@@ -103,7 +98,7 @@ public interface IRenderer2d extends IRenderer, ITextureHolder, IItemRenderer {
                 .color(color.getX(), color.getX(), color.getZ(), 255)
                 .endVertex();
         builder.pos(matrixPos, (float) stopX, (float) stopY, 32f)
-                .color(color.getX(), color.getX(), color.getZ(), 255)
+                .color(stopColor.getX(), stopColor.getY(), stopColor.getZ(), 255)
                 .endVertex();
         ctx().getStack().pop();
         RenderSystem.enableDepthTest();

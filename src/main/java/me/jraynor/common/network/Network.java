@@ -3,6 +3,7 @@ package me.jraynor.common.network;
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
 import me.jraynor.NoMoreWires;
+import me.jraynor.api.packet.RemoveNode;
 import me.jraynor.old.INode2;
 import me.jraynor.common.network.packets.*;
 import me.jraynor.old.ClientNode;
@@ -68,6 +69,7 @@ public final class Network {
         registerPacket(ServerNode.class);
         registerPacket(AddNode.class);
         registerPacket(AddLink.class);
+        registerPacket(RemoveNode.class);
     }
 
     /**
@@ -127,7 +129,7 @@ public final class Network {
      */
     public static void subscribe(Object instance) {
         var methods = findSubscribers(instance);
-        methods.forEach(pair -> {
+        for(var pair : methods){
             var cls = pair.getFirst();
             var method = pair.getSecond();
             var map = callbacks.computeIfAbsent(cls, aClass -> new HashMap<>());
@@ -141,7 +143,7 @@ public final class Network {
                 }
             });
             NoMoreWires.logger.debug("Successfully subscribed " + cls.getSimpleName() + " callback for " + instance.getClass().getSimpleName() + " instance.");
-        });
+        }
     }
 
 

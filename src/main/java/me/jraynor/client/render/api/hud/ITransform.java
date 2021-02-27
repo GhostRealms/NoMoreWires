@@ -7,13 +7,13 @@ import me.jraynor.client.render.api.core.IRenderer;
  */
 public interface ITransform extends IRenderer {
 
-    int getX();
+    default int getX() {return 0;}
 
-    int getY();
+    default int getY() {return 0;}
 
-    int getWidth();
+    default int getWidth() {return 0;}
 
-    int getHeight();
+    default int getHeight() {return 0;}
 
     /**
      * @return the max x value based upon the pos and size
@@ -25,6 +25,12 @@ public interface ITransform extends IRenderer {
      */
     default int getMaxY() {return getRelY() + getHeight();}
 
+    /**
+     * @return true if we want to use the raw getX(). false if we want to use relative
+     */
+    default boolean isAbsolute() {
+        return false;
+    }
 
     /**
      * @return true if the element is hovered
@@ -32,7 +38,11 @@ public interface ITransform extends IRenderer {
     default boolean isHovered() {
         var mx = ctx().getMouseX();
         var my = ctx().getMouseY();
-        return mx >= getRelX()
+        if (isAbsolute()) return mx >= getX()
+                && mx <= getX() + getWidth()
+                && my >= getY()
+                && my <= getY() + getHeight();
+        else return mx >= getRelX()
                 && mx <= getMaxX()
                 && my >= getRelY()
                 && my <= getMaxY();

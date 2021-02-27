@@ -1,9 +1,11 @@
 package me.jraynor.common.tiles;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import me.jraynor.api.link.ILink;
 import me.jraynor.api.link.LinkServer;
 import me.jraynor.api.manager.NodeManager;
+import me.jraynor.api.packet.RemoveNode;
 import me.jraynor.api.util.NodeType;
 import me.jraynor.common.data.LinkData;
 import me.jraynor.common.network.Network;
@@ -18,6 +20,7 @@ import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.common.util.LazyOptional;
@@ -28,10 +31,12 @@ import net.minecraftforge.fml.network.NetworkEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Random;
 
 /**
  * This is the where the magic happens. This is the main utility tile.
  */
+@Log4j2
 public class SingularityTile extends TileEntity implements ITickableTileEntity {
     @Getter private NodeManager manager;
     private boolean init = false;
@@ -39,30 +44,36 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
     public SingularityTile() {
         super(ModRegistry.UTILITY_BLOCK_TILE.get());
         Network.subscribe(this);
-        this.manager = new NodeManager(FMLEnvironment.dist);
+        this.manager = new NodeManager();
+        this.manager.setDist(FMLEnvironment.dist);
+    }
+
+    /**
+     * This method is what will end up linking the blocks. It is called from the synthesizer item.
+     */
+    public void onNodeRemove(RemoveNode packet, NetworkEvent.Context ctx) {
+        log.info("Removing node from client (for ui update): " + packet.getUuid().toString());
+        manager.remove(packet.getUuid());
+        sync();
+        ctx.setPacketHandled(true);
     }
 
     /**
      * This method is what will end up linking the blocks. It is called from the synthesizer item.
      */
     public void onNodeAdd(AddNode self, NetworkEvent.Context ctx) {
-        if (ctx.getDirection() == NetworkDirection.PLAY_TO_SERVER) {
-            if (self.getNode().getNodeType() == NodeType.LINK)
-                manager.addLink((ILink) self.getNode());
-            else
-                manager.add(self.getNode());
-            sync();
-        }
+        manager.add(self.getNode());
+        sync();
+        ctx.setPacketHandled(true);
     }
 
     /**
      * This method is what will end up linking the blocks. It is called from the synthesizer item.
      */
     public void onLinkAdd(AddLink self, NetworkEvent.Context ctx) {
-        if (ctx.getDirection() == NetworkDirection.PLAY_TO_SERVER) {
-            manager.addLink(self.getAfterNode(), self.getToNode());
-            sync();
-        }
+        manager.addLink(self.getAfterNode(), self.getToNode());
+        sync();
+        ctx.setPacketHandled(true);
     }
 
     /**
@@ -73,11 +84,13 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
      */
     public void onLink(LinkData self, LinkData other) {
         var newLink = new LinkServer();
+        var rand = new Random();
         newLink.setPos(other.getPos());
         newLink.setFace(other.getSide());
-        if (manager.addLink(newLink).isPresent()) {
-            sync();
-        }
+        newLink.setX(rand.nextInt(200) + 10);
+        newLink.setY(rand.nextInt(150) + 10);
+        manager.add(newLink);
+        sync();
     }
 
     /**
@@ -90,7 +103,6 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
                 sync();
             }
     }
-
 
     /**
      * This will sync the transferData to the client
@@ -178,5 +190,4 @@ public class SingularityTile extends TileEntity implements ITickableTileEntity {
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction side) {
         return super.getCapability(cap, side);
     }
-
 }

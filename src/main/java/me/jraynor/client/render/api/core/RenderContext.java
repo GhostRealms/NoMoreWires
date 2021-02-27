@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -62,6 +63,9 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
         return Minecraft.getInstance().player;
     }
 
+    public Vector3d getProjectedView() {
+        return Minecraft.getInstance().gameRenderer.getActiveRenderInfo().getProjectedView();
+    }
 
     public World getWorld() {
         return Minecraft.getInstance().world;

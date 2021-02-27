@@ -3,6 +3,7 @@ package me.jraynor.api.operation;
 import lombok.Getter;
 import lombok.Setter;
 import me.jraynor.api.manager.NodeManager;
+import me.jraynor.api.menu.action.RemoveAction;
 import me.jraynor.api.node.ClientNode;
 import me.jraynor.api.node.INode;
 import me.jraynor.api.util.NodeType;
@@ -21,39 +22,14 @@ import java.util.UUID;
  * This represents a renderable operation that can be applied to and from nodes
  */
 public abstract class OperationClient extends ClientNode implements IOperation {
-    @Getter
-    @Setter
-    private Optional<UUID> from = Optional.empty(), to = Optional.empty();
-    @Getter
-    @Setter
-    private Optional<UUID> uuid = Optional.empty();
-
+    @Getter @Setter private Optional<UUID> from = Optional.empty(), to = Optional.empty();
+    @Getter @Setter private Optional<UUID> uuid = Optional.empty();
 
     /**
-     * This will make the tool tips
-     *
-     * @param text the text to append to
+     * All operations should be removable
      */
-    @Override
-    protected void makeTooltips(List<ITextProperties> text) {
+    @Override public void initialize() {
+        menu.add(new RemoveAction());
+        super.initialize();
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        if (getUuid().isEmpty()) return false;
-        if (o instanceof INode) {
-            var node = (INode) o;
-            if (node.getUuid().isEmpty()) return false;
-            return node.getUuid().get().equals(this.getUuid().get());
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getUuid());
-    }
-
 }

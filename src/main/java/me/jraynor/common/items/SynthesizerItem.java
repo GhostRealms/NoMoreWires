@@ -7,14 +7,18 @@ import me.jraynor.common.data.TransferMode;
 import me.jraynor.common.network.Network;
 import me.jraynor.common.network.packets.*;
 import me.jraynor.common.tiles.SingularityTile;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.command.arguments.BlockStateParser;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ActionResultType;
@@ -33,6 +37,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -105,6 +110,8 @@ public class SynthesizerItem extends Item {
                     Network.sendToClient(new LinkReset(block.getPos(), block.getSide()), (ServerPlayerEntity) playerIn);
                     LinkData.clear(stack);
                     playerIn.sendStatusMessage(new StringTextComponent(TextFormatting.WHITE + "link " + TextFormatting.RED + "reset" + TextFormatting.WHITE + " from: " + TextFormatting.RED + TextFormatting.UNDERLINE + name + TextFormatting.WHITE + " at " + block.getPos().getCoordinatesAsString()), true);
+                } else {
+                    playerIn.sendStatusMessage(new StringTextComponent("Copied blocks nbt data to clipboard"), true);
                 }
             }
         }

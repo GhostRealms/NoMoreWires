@@ -12,4 +12,5 @@ import java.util.UUID;
 public abstract class ServerNode implements INode {
     @Getter @Setter private Optional<UUID> from = Optional.empty(), to = Optional.empty();
     @Getter @Setter private Optional<UUID> uuid = Optional.empty();
+    @Getter @Setter private int x, y;
 }

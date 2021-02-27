@@ -6,6 +6,12 @@ import me.jraynor.client.render.api.core.RenderType;
 import me.jraynor.common.network.Network;
 import me.jraynor.common.network.packets.LeftClickAir;
 import me.jraynor.common.network.packets.LeftClickBlock;
+import me.jraynor.common.util.StringUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -58,15 +64,34 @@ public class ClientEvents {
      * @param event the interact event
      */
     @SubscribeEvent public static void onPlayerInteract(PlayerInteractEvent event) {
-        if (event instanceof PlayerInteractEvent.LeftClickBlock)
-            if (event.getItemStack().getItem() == ModRegistry.SYNTHESIZER_ITEM.get()) {
+        if (event instanceof PlayerInteractEvent.LeftClickBlock) {
+            if (event.getItemStack().getItem() == Items.LAPIS_LAZULI) {
+                copyCompound(event);
+                event.setCanceled(true);
+            } else if (event.getItemStack().getItem() == ModRegistry.SYNTHESIZER_ITEM.get()) {
                 Network.sendToServer(new LeftClickBlock(event.getItemStack(), event.getPlayer().isSneaking(), event.getPos(), event.getFace()));
                 event.setCanceled(true);
             }
+        }
         if (event instanceof PlayerInteractEvent.LeftClickEmpty)
             if (event.getItemStack().getItem() == ModRegistry.SYNTHESIZER_ITEM.get())
                 Network.sendToServer(new LeftClickAir(event.getItemStack(), event.getPlayer().isSneaking()));
-
     }
 
+
+    /**
+     * This will copy the compound nbt from the looked at block
+     *
+     * @param event the event to use
+     */
+    private static void copyCompound(PlayerInteractEvent event) {
+        if (event.getPlayer().isSneaking()) {
+            Minecraft.getInstance().player.connection.getNBTQueryManager().queryTileEntity(event.getPos(), StringUtils::setCompoundToClipboard);
+            event.getPlayer().sendStatusMessage(new StringTextComponent("Copied server side nbt data to clipboard"), true);
+        } else {
+            var tileentity = event.getWorld().getTileEntity(event.getPos());
+            StringUtils.setCompoundToClipboard(tileentity != null ? tileentity.write(new CompoundNBT()) : null);
+            event.getPlayer().sendStatusMessage(new StringTextComponent("Copied client side nbt data to clipboard"), true);
+        }
+    }
 }

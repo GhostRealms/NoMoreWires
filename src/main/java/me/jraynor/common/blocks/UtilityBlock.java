@@ -70,7 +70,6 @@ public class UtilityBlock extends Block {
     @Nullable @Override public TileEntity createTileEntity(BlockState state, IBlockReader world) {
         return ModRegistry.UTILITY_BLOCK_TILE.get().create();
     }
-
     @Override
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult rayTraceResult) {
         if (worldIn.isRemote) return ActionResultType.SUCCESS; // on client side, don't do anything

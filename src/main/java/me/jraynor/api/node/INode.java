@@ -1,5 +1,6 @@
 package me.jraynor.api.node;
 
+import com.mojang.datafixers.util.Pair;
 import me.jraynor.api.manager.NodeManager;
 import me.jraynor.api.serialize.ITaggable;
 import me.jraynor.api.util.NodeType;
@@ -14,19 +15,18 @@ import java.util.UUID;
  * This is the base for each of the linkable elements. They all need to be able to be written to nbt data.
  */
 public interface INode extends ITaggable {
-    /**
-     * Sets the parent if not set this will be considered a root
-     *
-     * @param from the from
-     */
-    void setFrom(Optional<UUID> from);
+    int getX();
+
+    void setX(int x);
+
+    int getY();
+
+    void setY(int y);
 
     void setManager(NodeManager manager);
 
-    /**
-     * This is the parent. If it's not present
-     */
-    Optional<UUID> getFrom();
+    NodeManager getManager();
+
 
     /**
      * This will set the link we're linked to
@@ -73,14 +73,13 @@ public interface INode extends ITaggable {
      */
     @Override default CompoundNBT write(CompoundNBT tag) {
         tag.putBoolean("has_uuid", getUuid().isPresent());
-        tag.putBoolean("has_from", getFrom().isPresent());
         tag.putBoolean("has_to", getTo().isPresent());
         if (getUuid().isPresent())
             tag.putString("node_uuid", getUuid().get().toString());
-        if (getFrom().isPresent())
-            tag.putString("from_uuid", getFrom().get().toString());
         if (getTo().isPresent())
             tag.putString("to_uuid", getTo().get().toString());
+        tag.putInt("client_pos_x", getX());
+        tag.putInt("client_pos_y", getY());
         return tag;
     }
 
@@ -92,9 +91,9 @@ public interface INode extends ITaggable {
     @Override default void read(CompoundNBT tag) {
         if (tag.getBoolean("has_uuid"))
             setUuid(Optional.of(UUID.fromString(tag.getString("node_uuid"))));
-        if (tag.getBoolean("has_from"))
-            setFrom(Optional.of(UUID.fromString(tag.getString("from_uuid"))));
         if (tag.getBoolean("has_to"))
             setTo(Optional.of(UUID.fromString(tag.getString("to_uuid"))));
+        setX(tag.getInt("client_pos_x"));
+        setY(tag.getInt("client_pos_y"));
     }
 }

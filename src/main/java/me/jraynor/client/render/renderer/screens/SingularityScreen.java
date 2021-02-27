@@ -5,6 +5,11 @@ import lombok.Getter;
 import me.jraynor.api.link.LinkClient;
 import me.jraynor.api.manager.NodeManager;
 import me.jraynor.api.node.ClientNode;
+import me.jraynor.api.operation.extract.ExtractOperationClient;
+import me.jraynor.api.operation.insert.InsertOperationClient;
+import me.jraynor.common.network.Network;
+import me.jraynor.common.network.packets.AddLink;
+import me.jraynor.common.network.packets.AddNode;
 import me.jraynor.common.tiles.SingularityTile;
 import me.jraynor.old.INode2;
 import me.jraynor.client.render.api.AbstractScreenRenderer;
@@ -29,6 +34,7 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
     @Getter private final BlockPos pos;
     @Getter private final Map<String, Pair<ResourceLocation, Pair<Integer, Integer>>> textures = new HashMap<>();
     private final Set<INode2> hovered = new HashSet<>();
+    private long last = System.currentTimeMillis();
 
     public SingularityScreen(BlockPos pos) {
         super(new TranslationTextComponent("screen.nmw.singularity"));
@@ -51,28 +57,12 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
     @Override
     public void tick() {
         super.tick();
-        /**
-         * This will iterate over all of the nodes
-         * on the client
-         */
-        if (getManager() != null)
-            getManager().getAllNodes().forEach((uuid, iNode) -> {
-                if (iNode instanceof ClientNode) {
-                    var clientNode = (ClientNode) iNode;
-                    clientNode.setParent(this);
-                    clientNode.fromParent(this);
-                    clientNode.tryInitialize();
-                    clientNode.tick();
-                }
-            });
-    }
-
-    /**
-     * Here we add a new extract operation of e is pressed
-     *
-     * @param event the event
-     */
-    private void onKey(InputEvent.KeyInputEvent event) {
+        forEachNode(clientNode -> {
+            clientNode.setParent(this);
+            clientNode.fromParent(this);
+            clientNode.tryInitialize();
+            clientNode.tick();
+        });
     }
 
     /**
@@ -83,24 +73,10 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
         super.subscribe();
         Consumer<InputEvent.KeyInputEvent> onKey = (event) -> {
             onKey(event);
-            if (getManager() != null)
-                getManager().getAllNodes().forEach((uuid, iNode) -> {
-                    if (iNode instanceof ClientNode) {
-                        var clientNode = (ClientNode) iNode;
-                        clientNode.onKey(event);
-                    }
-                });
+            forEachNode(clientNode -> clientNode.onKey(event));
         };
         MinecraftForge.EVENT_BUS.addListener(onKey);
-        Consumer<InputEvent.MouseInputEvent> onMouse = (event) -> {
-            if (getManager() != null)
-                getManager().getAllNodes().forEach((uuid, iNode) -> {
-                    if (iNode instanceof ClientNode) {
-                        var clientNode = (ClientNode) iNode;
-                        clientNode.onMouse(event);
-                    }
-                });
-        };
+        Consumer<InputEvent.MouseInputEvent> onMouse = (event) -> forEachNode(clientNode -> clientNode.onMouse(event));
         MinecraftForge.EVENT_BUS.addListener(onMouse);
     }
 
@@ -116,30 +92,55 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
      */
     @Override
     public void render() {
-        drawBackground();
-        if (getManager() != null) {
-            getManager().getAllNodes().forEach((uuid, iNode) -> {
-                if (iNode instanceof ClientNode) {
-                    var clientNode = (ClientNode) iNode;
-                    clientNode.render();
-                }
-            });
-        }
-        drawToolTips();
         super.render();
+        drawBackground();
+        forEachNode(ClientNode::drawBackground); //Render each of the
+        forEachNode(ClientNode::render); //Render each of the
+        forEachNode(ClientNode::drawForeground); //Render each of the
+        forEachNode(clientNode -> {
+            if (clientNode.isHovered() && !clientNode.getMenu().isEnabled()) //Only show the tool tip if the context menu is active
+                clientNode.drawToolTip(clientNode.getTextCache());
+        });
+        forEachNode(ClientNode::drawContextMenu);
     }
 
-    private void drawToolTips() {
+    /**
+     * This will add insert/extract nodes when the key is pressed
+     */
+    private void onKey(InputEvent.KeyInputEvent event) {
+        var now = System.currentTimeMillis();
+        if (now - last > 500) {
+            last = System.currentTimeMillis();
+            if ((event.getKey() == GLFW.GLFW_KEY_E || event.getKey() == GLFW.GLFW_KEY_I) && event.getAction() == GLFW.GLFW_RELEASE) {
+                var node = event.getKey() == GLFW.GLFW_KEY_E ? new ExtractOperationClient() : new InsertOperationClient();
+                var rand = new Random();
+                node.setX(rand.nextInt(200) + 16);
+                node.setY(rand.nextInt(150) + 16);
+                node.setUuid(Optional.of(UUID.randomUUID()));
+                node.setManager(getManager());
+                node.setParent(this);
+                getManager().add(node);
+                System.out.println("Added new extract operation on client");
+                Network.sendToServer(new AddNode(node));
+            }
+        }
+    }
+
+
+    /**
+     * This will get all of the nodes that are client nodes and iterate them
+     *
+     * @param consumer the callback
+     */
+    protected void forEachNode(Consumer<ClientNode> consumer) {
         if (getManager() != null) {
             for (var iNode : getManager().getAllNodes().values()) {
                 if (iNode instanceof ClientNode) {
-                    var clientNode = (ClientNode) iNode;
-                    if (clientNode.isHovered())
-                        clientNode.drawToolTip(clientNode.getTextCache());
+                    var node = (ClientNode) iNode;
+                    consumer.accept(node);
                 }
             }
         }
-
     }
 
     /**
@@ -162,14 +163,26 @@ public class SingularityScreen extends AbstractScreenRenderer implements ITextur
      */
     public SingularityTile getTile() {
         if (ctx().getWorld() == null) return null;
+        var tile = ctx().getWorld().getTileEntity(pos);
+        if (tile == null) return null;
+        if (!(tile instanceof SingularityTile))
+            return null;
         return (SingularityTile) ctx().getWorld().getTileEntity(pos);
+    }
+
+    @Override public void closeScreen() {
+        MinecraftForge.EVENT_BUS.unregister(this);
+        super.closeScreen();
     }
 
     /**
      * @return the node manager
      */
     private NodeManager getManager() {
-        if (getTile() == null) return null;
+        if (getTile() == null) {
+            MinecraftForge.EVENT_BUS.unregister(this);
+            return null;
+        }
         return getTile().getManager();
     }
 

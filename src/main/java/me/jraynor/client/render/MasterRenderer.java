@@ -6,8 +6,8 @@ import me.jraynor.client.render.api.core.IContainer;
 import me.jraynor.client.render.api.core.IRenderer;
 import me.jraynor.client.render.api.core.IAbsorbable;
 import me.jraynor.client.render.api.core.RenderType;
+import me.jraynor.client.render.renderer.OverlayRenderer;
 import me.jraynor.client.render.renderer.hud.ConnectionOverlay;
-import me.jraynor.client.render.renderer.ConnectionRenderer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -25,7 +25,7 @@ public final class MasterRenderer extends AbstractRenderer implements IAbsorbabl
 
     private MasterRenderer() {
         super(RenderType.WORLD);
-        addChild(new ConnectionRenderer());
+        addChild(new OverlayRenderer());
         addChild(new ConnectionOverlay());
         initialize();
     }

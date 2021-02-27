@@ -1,4 +1,4 @@
-package me.jraynor.client.render.api.hud;
+package me.jraynor.client.render.api.core;
 
 import me.jraynor.client.render.api.core.IRenderer;
 import net.minecraftforge.client.event.InputEvent;
@@ -16,20 +16,6 @@ public interface IInputEvents extends IRenderer {
      */
     default void onMouse(InputEvent.MouseInputEvent event) {}
 
-    /**
-     * This will be passed via the parent to all of the children of this type.
-     * This is called when there is a click
-     *
-     * @param event the passed event
-     */
-    default void onClick(InputEvent.ClickInputEvent event) {}
-
-    /**
-     * This is called when theres a scroll
-     *
-     * @param event the event to be called
-     */
-    default void onScroll(InputEvent.MouseScrollEvent event) {}
 
     /**
      * This is called when a key is pressed or released

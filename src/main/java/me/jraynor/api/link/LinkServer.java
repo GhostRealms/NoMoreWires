@@ -19,7 +19,9 @@ public class LinkServer extends ServerNode implements ILink {
     @Getter @Setter private Direction face;
     @Getter @Setter private BlockPos pos;
     @Getter private NodeType nodeType = NodeType.LINK;
-    @Setter protected NodeManager manager;
+    @Setter @Getter protected NodeManager manager;
+
+
 
 
     @Override public boolean equals(Object o) {

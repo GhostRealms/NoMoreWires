@@ -6,7 +6,7 @@ import lombok.Setter;
 import me.jraynor.client.render.api.core.IContainer;
 import me.jraynor.client.render.api.core.IRenderer;
 import me.jraynor.client.render.api.core.RenderType;
-import me.jraynor.client.render.api.hud.IInputEvents;
+import me.jraynor.client.render.api.core.IInputEvents;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.client.event.InputEvent;
@@ -52,18 +52,6 @@ public abstract class AbstractScreenRenderer extends Screen implements IRenderer
         /**
          * This is used to pass the event to the children
          */
-        Consumer<InputEvent.ClickInputEvent> onClick = (event) -> {
-            getChildren().values().forEach(renderers -> renderers.forEach(renderer -> {
-                if (renderer instanceof IInputEvents) {
-                    var events = (IInputEvents) renderer;
-                    events.onClick(event);
-                }
-            }));
-        };
-        MinecraftForge.EVENT_BUS.addListener(onClick);
-        /**
-         * This is used to pass the event to the children
-         */
         Consumer<InputEvent.KeyInputEvent> onKey = (event) -> {
             getChildren().values().forEach(renderers -> renderers.forEach(renderer -> {
                 if (renderer instanceof IInputEvents) {
@@ -73,18 +61,6 @@ public abstract class AbstractScreenRenderer extends Screen implements IRenderer
             }));
         };
         MinecraftForge.EVENT_BUS.addListener(onKey);
-        /**
-         * This is used to pass the event to the children
-         */
-        Consumer<InputEvent.MouseScrollEvent> onScroll = (event) -> {
-            getChildren().values().forEach(renderers -> renderers.forEach(renderer -> {
-                if (renderer instanceof IInputEvents) {
-                    var events = (IInputEvents) renderer;
-                    events.onScroll(event);
-                }
-            }));
-        };
-        MinecraftForge.EVENT_BUS.addListener(onScroll);
     }
 
 

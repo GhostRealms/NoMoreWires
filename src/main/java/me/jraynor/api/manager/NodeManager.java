@@ -2,6 +2,7 @@ package me.jraynor.api.manager;
 
 import com.google.common.collect.Maps;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import me.jraynor.api.link.ILink;
 import me.jraynor.api.link.LinkClient;
@@ -24,19 +25,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class is where the core the node system happens.
- * It stores all of the {@link NodePath} and allow for iteration over each,
+ * It stores all of the and allow for iteration over each,
  * or it allows you to add a new path, or remove a path. It managaes all nodes for a given
  * controller.
  */
 @Log4j2
 public final class NodeManager implements ITaggable {
-    @Getter final Map<UUID, INode> allNodes = Maps.newHashMap();
-    private final Map<UUID, NodePath> nodePaths = Maps.newHashMap();
-    private Dist dist;
+    @Getter final Map<UUID, INode> allNodes = Maps.newConcurrentMap();
+    @Setter private Dist dist = Dist.DEDICATED_SERVER;
 
-    public NodeManager(Dist dist) {
-        this.dist = dist;
-    }
 
     /**
      * This will simply add a node.
@@ -51,24 +48,6 @@ public final class NodeManager implements ITaggable {
         return node.getUuid().get();
     }
 
-    /**
-     * This will add a new link/nodepath
-     *
-     * @param link the link to add
-     * @return the uuid the link
-     */
-    public Optional<UUID> addLink(ILink link) {
-        if (link.getUuid().isEmpty())
-            link.setUuid(Optional.of(UUID.randomUUID()));
-        if (!nodePaths.containsKey(link.getUuid().get())) {
-            link.setManager(this);
-            nodePaths.put(link.getUuid().get(), new NodePath(link, this));
-            log.debug("Added new link: " + link.getUuid().toString());
-            return link.getUuid();
-        }
-        log.debug("Link already exists: " + link.getUuid().toString());
-        return Optional.empty();
-    }
 
     /**
      * This will add a new link from the from to the to
@@ -76,10 +55,14 @@ public final class NodeManager implements ITaggable {
     public void addLink(UUID from, UUID to) {
         var fromNode = getAllNodes().get(from);
         var toNode = getAllNodes().get(to);
-        if (fromNode.getTo().isPresent()) {
-            toNode.setTo(fromNode.getTo());
+        if (from.equals(to) && fromNode != null)
+            fromNode.setTo(Optional.empty());
+        else {
+            if (fromNode != null && toNode != null) {
+                fromNode.setTo(Optional.of(to));
+                log.warn("Found nodes and linked!");
+            }
         }
-        fromNode.setTo(toNode.getUuid());
     }
 
     /**
@@ -116,7 +99,6 @@ public final class NodeManager implements ITaggable {
      */
     @Override
     public void read(CompoundNBT tag) {
-        System.out.println("Starting to read tag: " + tag);
         var headsSize = tag.getInt("node_head_size");
         var nodeIds = new HashSet<UUID>();
         for (var i = 0; i < headsSize; i++) {
@@ -166,4 +148,19 @@ public final class NodeManager implements ITaggable {
         return node;
     }
 
+    /**
+     * Removes the given node also will removes links if possible
+     *
+     * @param uuid
+     */
+    public void remove(UUID uuid) {
+        if (allNodes.containsKey(uuid)) {
+            for (var node : allNodes.values()) {
+                if (node.getTo().isPresent() && node.getTo().get().equals(uuid)) {
+                    node.setTo(Optional.empty());
+                }
+            }
+            allNodes.remove(uuid);
+        }
+    }
 }

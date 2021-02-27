@@ -3,6 +3,9 @@ package me.jraynor.api.link;
 import lombok.Getter;
 import lombok.Setter;
 import me.jraynor.api.manager.NodeManager;
+import me.jraynor.api.menu.NodeMenu;
+import me.jraynor.api.menu.action.HighlightAction;
+import me.jraynor.api.menu.action.RemoveAction;
 import me.jraynor.api.node.ClientNode;
 import me.jraynor.api.node.INode;
 import me.jraynor.api.operation.extract.ExtractOperationClient;
@@ -30,25 +33,16 @@ import java.util.Random;
  * This represent real blocks in the the world that can be extracted from/ inserted into
  */
 public class LinkClient extends ClientNode implements ILink {
-    @Getter
-    @Setter
-    private Direction face;
-    @Getter
-    @Setter
-    private BlockPos pos;
+    @Getter @Setter private Direction face;
+    @Getter @Setter private BlockPos pos;
     @Getter private NodeType nodeType = NodeType.LINK;
 
-
-    @Override
-    public void initialize() {
-        var rand = new Random();
-        this.x = rand.nextInt(200);
-        this.y = rand.nextInt(150);
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
+    /**
+     * This will add a remove action to the menu
+     */
+    @Override public void initialize() {
+        menu.add(new RemoveAction()).add(new HighlightAction());
+        super.initialize();
     }
 
     /**
@@ -56,8 +50,7 @@ public class LinkClient extends ClientNode implements ILink {
      *
      * @param text the text to append to
      */
-    @Override
-    protected void makeTooltips(List<ITextProperties> text) {
+    @Override protected void makeTooltips(List<ITextProperties> text) {
         text.add(new StringTextComponent(TextFormatting.GOLD + "Linker"));
         text.add(new StringTextComponent(TextFormatting.STRIKETHROUGH + "                                "));
         text.add(new StringTextComponent(TextFormatting.DARK_GRAY + "  block: " + TextFormatting.DARK_PURPLE + getLinkedBlockName()));
@@ -69,28 +62,20 @@ public class LinkClient extends ClientNode implements ILink {
      * @return the linked block's name.
      */
     private String getLinkedBlockName() {
-        var state = ctx().getWorld().getBlockState(pos);
-        return state.getBlock().getTranslatedName().getString();
+        if (getPos() != null) {
+            var state = ctx().getWorld().getBlockState(pos);
+            return state.getBlock().getTranslatedName().getString();
+        }
+        return "N/A";
     }
 
-    /**
-     * This will render the link client
-     */
-    @Override
-    public void render() {
-        super.render();
-        drawItem(new ItemStack(ctx().getWorld().getBlockState(pos).getBlock()), getRelX(), getRelY());
-    }
 
     /**
-     * This will be passed via the parent to all of the children of this type.
-     * its called when there's some kind of mouse event
-     *
-     * @param event the passed event
+     * Renders our block item on top
      */
-    @Override
-    public void onMouse(InputEvent.MouseInputEvent event) {
-        super.onMouse(event);
+    @Override public void drawForeground() {
+        if (getPos() != null)
+            drawItem(new ItemStack(ctx().getWorld().getBlockState(pos).getBlock()), getRelX(), getRelY());
     }
 
     /**
@@ -102,29 +87,19 @@ public class LinkClient extends ClientNode implements ILink {
     @Override
     public void onKey(InputEvent.KeyInputEvent event) {
         super.onKey(event);
-        //Add new extract node that is linked to this.
-        if (event.getKey() == GLFW.GLFW_KEY_E && event.getAction() == GLFW.GLFW_RELEASE) {
-            Network.sendToServer(new AddNode(new ExtractOperationServer()));
-        } else if (event.getKey() == GLFW.GLFW_KEY_I && event.getAction() == GLFW.GLFW_RELEASE) {
-            Network.sendToServer(new AddNode(new InsertOperationServer()));
-        }
+//        INode node = null;
+//        //Add new extract node that is linked to this.
+//        if (event.getKey() == GLFW.GLFW_KEY_E && event.getAction() == GLFW.GLFW_RELEASE) {
+//            node = new ExtractOperationServer();
+//        } else if (event.getKey() == GLFW.GLFW_KEY_I && event.getAction() == GLFW.GLFW_RELEASE) {
+//            node = new InsertOperationServer();
+//        }
+//        if (node != null) {
+//            var rand = new Random();
+//            node.setX(rand.nextInt(200) + 16);
+//            node.setY(rand.nextInt(150) + 16);
+//            Network.sendToServer(new AddNode(node));
+//        }
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        if (getUuid().isEmpty()) return false;
-        if (o instanceof INode) {
-            var node = (INode) o;
-            if (node.getUuid().isEmpty()) return false;
-            return node.getUuid().get().equals(this.getUuid().get());
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getUuid());
-    }
 }

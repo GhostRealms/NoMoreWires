@@ -15,7 +15,9 @@ public interface ITextureHolder extends IRenderer {
     Map<String, Pair<ResourceLocation, Pair<Integer, Integer>>> getTextures();
 
     default ResourceLocation getResource(String name) {
-        return getTextures().get(name).getFirst();
+        if (getTextures().containsKey(name))
+            return getTextures().get(name).getFirst();
+        return null;
     }
 
     default Pair<Integer, Integer> getSize(String name) {

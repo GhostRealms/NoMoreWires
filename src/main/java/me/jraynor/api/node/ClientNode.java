@@ -1,23 +1,20 @@
 package me.jraynor.api.node;
 
 import com.mojang.datafixers.util.Pair;
-import it.unimi.dsi.fastutil.doubles.Double2ReferenceArrayMap;
 import lombok.Getter;
 import lombok.Setter;
-import me.jraynor.api.link.ILink;
+import me.jraynor.api.menu.NodeMenu;
 import me.jraynor.api.manager.NodeManager;
-import me.jraynor.api.util.NodeType;
 import me.jraynor.client.render.api.AbstractRenderer;
 import me.jraynor.client.render.api.core.IAbsorbable;
 import me.jraynor.client.render.api.core.RenderType;
-import me.jraynor.client.render.api.hud.IInputEvents;
+import me.jraynor.client.render.api.core.IInputEvents;
 import me.jraynor.client.render.api.hud.IRenderer2d;
 import me.jraynor.client.render.api.hud.ITextureHolder;
 import me.jraynor.client.render.api.hud.ITransform;
 import me.jraynor.client.render.renderer.screens.SingularityScreen;
 import me.jraynor.common.network.Network;
 import me.jraynor.common.network.packets.AddLink;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.util.text.ITextProperties;
@@ -25,7 +22,7 @@ import net.minecraftforge.client.event.InputEvent;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This is used for simple data storage of the stuff
@@ -34,97 +31,94 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
     /*==================== Render related =====================*/
     @Getter protected int width = 16, height = 16;
     protected boolean dragging = false;
-    @Getter protected int x, y;
+    @Getter @Setter private int x, y;
     protected int offsetX = 0, offsetY = 0;
     protected boolean shiftDown = false;
-    protected boolean linking = false;
     @Getter private final Map<String, Pair<ResourceLocation, Pair<Integer, Integer>>> textures = new HashMap<>();
-    /*==================== INode2 related =====================*/
-    @Getter
-    @Setter
-    private Optional<UUID> from = Optional.empty(), to = Optional.empty();
-    @Getter
-    @Setter
-    private Optional<UUID> uuid = Optional.empty();
+    /*==================== INode related =====================*/
+    @Getter @Setter private Optional<UUID> from = Optional.empty(), to = Optional.empty();
+    @Getter @Setter private Optional<UUID> uuid = Optional.empty();
     @Getter private final List<ITextProperties> textCache = new ArrayList<>();
-    @Setter protected NodeManager manager;
+    @Getter @Setter protected NodeManager manager;
+    /*========================================================*/
+    @Getter protected NodeMenu menu = new NodeMenu(this);
 
     public ClientNode() {
         super(RenderType.SCREEN);
     }
 
+
+    /**
+     * This will initialize our menu
+     */
+    @Override public void initialize() {
+        super.initialize();
+        menu.setNode(this);
+        menu.setParent(this);
+        menu.tryInitialize();
+        menu.setEnabled(false);
+    }
+
     @Override
     public void tick() {
-        super.render();
+        super.tick();
         if (isHovered()) {
             textCache.clear();
             makeTooltips(textCache);
         }
-
-        var collidesWith = manager.getAllNodes()
-                .values()
-                .stream()
-                .filter(this::overlaps)
-                .map(iNode -> (ClientNode) iNode)
-                .collect(Collectors.toList());
-        collidesWith.forEach(clientNode -> {
-            var offset = findOffset(clientNode);
-            offsetX += offset.getFirst();
-            offsetY += offset.getSecond();
-
-        });
+        if (getMenu().isEnabled())
+            getMenu().tick();
     }
 
-    private Pair<Integer, Integer> findOffset(ClientNode other) {
-        var node = (ClientNode) other;
-        var offsetX = 0;
-        var offsetY = 0;
-        var x1 = node.getRelX();
-        var y1 = node.getRelY();
-        var mx1 = node.getMaxX();
-        var my1 = node.getMaxY();
-
-        var x2 = getRelX();
-        var y2 = getRelY();
-        var mx2 = getMaxX();
-        var my2 = getMaxY();
-        // If one rectangle is on left side of other
-        if (x1 >= mx2 || x2 >= mx1) {
-            offsetX += 16;
-        }
-
-        // If one rectangle is above other
-        if (y1 <= my2 || y2 <= my1) {
-            offsetY += 16;
-        }
-        return new Pair<>(offsetX, offsetY);
+    /**
+     * Allows for the last bottom to be drawn
+     */
+    public void drawBackground() {
+        bindTexture("bg");
+        drawTexture("bg", getRelX(), getRelY(), 0, 205, 16, 16);
     }
 
+
+    /**
+     * The middle renderering
+     */
     @Override
     public void render() {
-        super.render();
         if (parent != null) {
             if (parent instanceof SingularityScreen) {
                 var screen = (SingularityScreen) parent;
                 if (dragging && !shiftDown) {
-                    drawLine(getRelX() + (getWidth() / 2), (getRelY() + getHeight() / 2), ctx().getMouseX(), ctx().getMouseY(), 3, new Vector3i(255, 255, 255));
+                    drawLine(getRelX() + (getWidth() / 2), (getRelY() + getHeight() / 2), ctx().getMouseX(), ctx().getMouseY(), new Vector3i(255, 50, 25), new Vector3i(150, 50, 25));
                 } else if (dragging) {
                     this.x = Math.min(Math.max((ctx().getMouseX() - offsetX) - screen.getX(), 0), screen.getWidth() - getWidth());
                     this.y = Math.min(Math.max((ctx().getMouseY() - offsetY) - screen.getY(), 0), screen.getHeight() - getHeight());
                 }
-
                 if (getTo().isPresent()) {
                     var toNode = manager.getAllNodes().get(getTo().get());
                     if (toNode instanceof ClientNode) {
                         var clientNode = (ClientNode) toNode;
-                        drawLine(getRelX() + (getWidth() / 2), (getRelY() + getHeight() / 2), clientNode.getRelX() + clientNode.getWidth() / 2, clientNode.getRelY() + clientNode.getHeight() / 2, 3, new Vector3i(255, 255, 255));
+                        drawLine(getRelX() + (getWidth() / 2), (getRelY() + getHeight() / 2), clientNode.getRelX() + clientNode.getWidth() / 2, clientNode.getRelY() + clientNode.getHeight() / 2, new Vector3i(255, 255, 255));
                     }
                 }
-                bindTexture("bg");
-                drawTexture("bg", getRelX(), getRelY(), 0, 205, 16, 16);
             }
         }
     }
+
+    /**
+     * Allows for the last top to be drawn
+     */
+    public void drawForeground() {}
+
+    /**
+     * This is used for drawing the background
+     */
+    public void drawContextMenu() {
+        if (getMenu().isEnabled()) {
+            getMenu().setNode(this);
+            getMenu().render();
+        }
+    }
+
 
     /**
      * This will make the tool tips
@@ -141,6 +135,14 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
      */
     @Override
     public void onMouse(InputEvent.MouseInputEvent event) {
+        getMenu().onMouse(event);
+        if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
+            if (event.getAction() == GLFW.GLFW_PRESS) {
+                if (isHovered()) {
+                    getMenu().setEnabled(true);
+                }
+            }
+        }
         if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             if (event.getAction() == GLFW.GLFW_PRESS) {
                 //Left click
@@ -148,6 +150,9 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
                     dragging = true;
                     this.offsetX = ctx().getMouseX() - getRelX();
                     this.offsetY = ctx().getMouseY() - getRelY();
+                } else {
+                    if (!getMenu().childrenHovered())
+                        getMenu().setEnabled(false);
                 }
             } else if (event.getAction() == GLFW.GLFW_RELEASE && dragging) {
                 dragging = false;
@@ -156,18 +161,30 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
                 if (!shiftDown) {
                     //TODO add a link
                     if (manager != null) {
+                        var linked = new AtomicBoolean(false);
                         manager.getAllNodes().values().forEach(iNode -> {
                             if (iNode instanceof ClientNode) {
                                 var clientNode = (ClientNode) iNode;
-                                if (clientNode.isHovered()) {
+                                if (clientNode.isHovered() && !linked.get()) {
                                     onLink(iNode);
+                                    linked.set(true);
                                 }
                             }
                         });
+                        if (!linked.get()) {
+                            onUnlink();
+                        }
                     }
                 }
             }
         }
+    }
+
+    /**
+     * This can be overridden but the super must be called.
+     */
+    protected void onUnlink() {
+//        Network.sendToServer(new RemoveLink());
     }
 
     /**
@@ -177,6 +194,7 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
      */
     private void onLink(INode toAdd) {
         Network.sendToServer(new AddLink(this.getUuid().get(), toAdd.getUuid().get()));
+        manager.addLink(this.getUuid().get(), toAdd.getUuid().get());
     }
 
     /**
@@ -186,6 +204,7 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
      */
     @Override
     public void onKey(InputEvent.KeyInputEvent event) {
+        getMenu().onKey(event);
         if (event.getKey() == GLFW.GLFW_KEY_LEFT_SHIFT) {
             if (event.getAction() == GLFW.GLFW_PRESS) {
                 shiftDown = true;
@@ -208,30 +227,22 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
                 && my <= getMaxY();
     }
 
-    /**
-     * Checks to see if this is overlapping with any other
-     */
-    public boolean overlaps(INode other) {
-        if (!(other instanceof ClientNode)) return false;
-        var node = (ClientNode) other;
-        var x1 = node.getRelX();
-        var y1 = node.getRelY();
-        var mx1 = node.getMaxX();
-        var my1 = node.getMaxY();
 
-        var x2 = getRelX();
-        var y2 = getRelY();
-        var mx2 = getMaxX();
-        var my2 = getMaxY();
-        // If one rectangle is on left side of other
-        if (x1 >= mx2 || x2 >= mx1) {
-            return false;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null) return false;
+        if (getUuid().isEmpty()) return false;
+        if (o instanceof INode) {
+            var node = (INode) o;
+            if (node.getUuid().isEmpty()) return false;
+            return node.getUuid().get().equals(this.getUuid().get());
         }
+        return false;
+    }
 
-        // If one rectangle is above other
-        if (y1 <= my2 || y2 <= my1) {
-            return false;
-        }
-        return true;
+    @Override
+    public int hashCode() {
+        return Objects.hash(getUuid());
     }
 }

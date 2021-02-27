@@ -3,6 +3,8 @@ package me.jraynor.api.operation.extract;
 import lombok.Getter;
 import lombok.Setter;
 import me.jraynor.api.manager.NodeManager;
+import me.jraynor.api.menu.NodeMenu;
+import me.jraynor.api.menu.action.RemoveAction;
 import me.jraynor.api.node.ClientNode;
 import me.jraynor.api.node.INode;
 import me.jraynor.api.operation.IOperation;
@@ -21,14 +23,7 @@ import java.util.UUID;
  * This represents a renderable operation that can be applied to and from nodes
  */
 public class ExtractOperationClient extends OperationClient {
-
     @Getter private NodeType nodeType = NodeType.EXTRACT_OP;
-
-
-    @Override
-    public void render() {
-        super.render();
-    }
 
     /**
      * This will make the tool tips

@@ -7,7 +7,7 @@ import lombok.Setter;
 import me.jraynor.client.render.api.AbstractRenderer;
 import me.jraynor.client.render.api.core.IAbsorbable;
 import me.jraynor.client.render.api.core.RenderType;
-import me.jraynor.client.render.api.hud.IInputEvents;
+import me.jraynor.client.render.api.core.IInputEvents;
 import me.jraynor.client.render.api.hud.IRenderer2d;
 import me.jraynor.client.render.api.hud.ITransform;
 import me.jraynor.client.render.api.hud.ITextureHolder;
@@ -61,7 +61,7 @@ public class ClientNode extends AbstractRenderer implements INode2, ITextureHold
             if (parent instanceof SingularityScreen) {
                 var screen = (SingularityScreen) parent;
                 if (dragging && !shiftDown) {
-                    drawLine(getRelX(), getRelY(), ctx().getMouseX(), ctx().getMouseY(), 3, new Vector3i(255, 1, 1));
+                    drawLine(getRelX(), getRelY(), ctx().getMouseX(), ctx().getMouseY(), new Vector3i(255, 1, 1));
                 } else if (dragging) {
                     this.x = Math.min(Math.max((ctx().getMouseX() - offsetX) - screen.getX(), 0), screen.getWidth() - getWidth());
                     this.y = Math.min(Math.max((ctx().getMouseY() - offsetY) - screen.getY(), 0), screen.getHeight() - getHeight());

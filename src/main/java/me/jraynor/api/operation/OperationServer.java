@@ -1,5 +1,6 @@
 package me.jraynor.api.operation;
 
+import com.mojang.datafixers.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
 import me.jraynor.api.manager.NodeManager;
@@ -8,6 +9,7 @@ import me.jraynor.api.util.NodeType;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -16,27 +18,13 @@ import java.util.UUID;
 public abstract class OperationServer implements IOperation {
     @Getter @Setter private Optional<UUID> from = Optional.empty(), to = Optional.empty();
     @Getter @Setter private Optional<UUID> uuid = Optional.empty();
-    @Setter protected NodeManager manager;
+    @Getter@Setter protected NodeManager manager;
+    @Getter @Setter private int x, y;
 
     /**
      * This is called when the operation is executed on the server
      */
     @Override public void execute() {}
 
-    @Override public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-        if (getUuid().isEmpty()) return false;
-        if (o instanceof INode) {
-            var node = (INode) o;
-            if (node.getUuid().isEmpty()) return false;
-            return node.getUuid().get().equals(this.getUuid().get());
-        }
-        return false;
-    }
-
-    @Override public int hashCode() {
-        return Objects.hash(getUuid());
-    }
 
 }

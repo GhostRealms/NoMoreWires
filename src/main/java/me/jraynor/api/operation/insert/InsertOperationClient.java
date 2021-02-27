@@ -2,6 +2,8 @@ package me.jraynor.api.operation.insert;
 
 import lombok.Getter;
 import me.jraynor.api.manager.NodeManager;
+import me.jraynor.api.menu.NodeMenu;
+import me.jraynor.api.menu.action.RemoveAction;
 import me.jraynor.api.operation.OperationClient;
 import me.jraynor.api.util.NodeType;
 import net.minecraft.util.text.ITextProperties;
@@ -15,6 +17,7 @@ import java.util.List;
  */
 public class InsertOperationClient extends OperationClient {
     @Getter private NodeType nodeType = NodeType.INSERT_OP;
+
 
     @Override
     public void render() {
