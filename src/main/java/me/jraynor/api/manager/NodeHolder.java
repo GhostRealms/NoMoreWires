@@ -2,23 +2,14 @@ package me.jraynor.api.manager;
 
 import com.google.common.collect.Maps;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
-import me.jraynor.api.packet.RequestSync;
-import me.jraynor.api.packet.ResponseSync;
 import me.jraynor.api.node.INode;
 import me.jraynor.api.serialize.ITaggable;
 import me.jraynor.api.util.NodeType;
-import me.jraynor.common.network.Network;
 import me.jraynor.common.util.TagUtils;
 import me.jraynor.core.Side;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.network.NetworkDirection;
-import net.minecraftforge.fml.network.NetworkEvent;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -32,11 +23,10 @@ import java.util.*;
 @Log4j2
 public final class NodeHolder implements ITaggable {
     @Getter final Map<UUID, INode> allNodes = Maps.newHashMap();
-    private final TileEntity tile;
-    @Setter private BlockPos tilePos;
+    @Getter private BlockPos pos;
 
-    public NodeHolder(TileEntity tile) {
-        this.tile = tile;
+    public NodeHolder(BlockPos pos) {
+        this.pos = pos;
     }
 
     /**
@@ -45,20 +35,12 @@ public final class NodeHolder implements ITaggable {
      * @param nodeIn the node to add
      */
     public boolean add(INode nodeIn) {
-        var node = nodeIn.getNodeType().newNodeFor(getSide());
+        var node = nodeIn.getNodeType().newNodeFor(Side.SERVER);
         node.read(nodeIn.write(new CompoundNBT()));
         if (node.getUuid().isEmpty()) {
             log.error("Attempted to add node that doesn't have a uuid");
             return false;
         }
-        //We want to only update the data if it already exists
-        if (node.getTilePos() != null) {
-            if (!node.getTilePos().equals(this.tile.getPos())) {
-                log.error("Attempted to add mismatched node, manager tile pos: " + this.tilePos.getCoordinatesAsString() + ", node tile pos: " + node.getTilePos().getCoordinatesAsString());
-                return false;
-            }
-        }
-        node.setTilePos(this.tile.getPos());
         allNodes.put(node.getUuid().get(), node);
         return true;
     }
@@ -149,7 +131,7 @@ public final class NodeHolder implements ITaggable {
     INode readNode(CompoundNBT tag, UUID uuid) {
         var types = (CompoundNBT) tag.get("types");
         var type = TagUtils.readEnumValue(types, uuid.toString(), NodeType.class);
-        var node = type.newNodeFor(getSide());
+        var node = type.newNodeFor(Side.SERVER);
         var nodeTag = (CompoundNBT) tag.get(uuid.toString());
         if (node == null || nodeTag == null) return null;
         node.read(nodeTag);
@@ -163,7 +145,8 @@ public final class NodeHolder implements ITaggable {
      * @param uuid the uuid of the node to get
      * @return the node with the given uuid. Will return null if not present
      */
-    @Nullable public INode getNode(UUID uuid) {
+    @Nullable
+    public INode getNode(UUID uuid) {
         if (!allNodes.containsKey(uuid)) return null;
         return allNodes.get(uuid);
     }
@@ -176,18 +159,13 @@ public final class NodeHolder implements ITaggable {
      * @param uuid the uuid of the node to get
      * @return the node with the given uuid. Will return null if not present
      */
-    @Nullable public <T extends INode> T getNodeAs(UUID uuid, Class<T> type) {
+    @Nullable
+    public <T extends INode> T getNodeAs(UUID uuid, Class<T> type) {
         if (!allNodes.containsKey(uuid)) return null;
         var node = allNodes.get(uuid);
         if (type.isAssignableFrom(node.getClass()))
             return (T) node;
         return null;
-    }
-
-    private Side getSide() {
-        if (tile.getWorld() == null) return Side.SERVER;
-        if (tile.getWorld().isRemote) return Side.CLIENT;
-        else return Side.SERVER;
     }
 
 }

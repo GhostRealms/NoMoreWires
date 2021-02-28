@@ -25,7 +25,7 @@ public class CommonEvents {
     @SubscribeEvent
     public static void onWorldLoad(WorldEvent.Load event) {
 //        Network.initializeNetwork();
-        ModRegistry.subscribeNeeded();
+//        ModRegistry.subscribeNeeded();
     }
 
     /**
