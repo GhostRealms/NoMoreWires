@@ -1,11 +1,11 @@
 package me.jraynor.api.node;
 
-import com.mojang.datafixers.util.Pair;
-import me.jraynor.api.manager.NodeManager;
+import me.jraynor.api.manager.NodeHolder;
 import me.jraynor.api.serialize.ITaggable;
 import me.jraynor.api.util.NodeType;
 import me.jraynor.common.util.TagUtils;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -23,9 +23,9 @@ public interface INode extends ITaggable {
 
     void setY(int y);
 
-    void setManager(NodeManager manager);
+    BlockPos getTilePos();
 
-    NodeManager getManager();
+    void setTilePos(BlockPos pos);
 
 
     /**
@@ -72,12 +72,10 @@ public interface INode extends ITaggable {
      * @return the given tag
      */
     @Override default CompoundNBT write(CompoundNBT tag) {
-        tag.putBoolean("has_uuid", getUuid().isPresent());
-        tag.putBoolean("has_to", getTo().isPresent());
-        if (getUuid().isPresent())
-            tag.putString("node_uuid", getUuid().get().toString());
+        TagUtils.writeUniqueId(tag, "node_uuid", getUuid().get());
         if (getTo().isPresent())
-            tag.putString("to_uuid", getTo().get().toString());
+            TagUtils.writeUniqueId(tag, "to_uuid", getTo().get());
+        TagUtils.writeBlockPos(tag, "controller_pos", getTilePos());
         tag.putInt("client_pos_x", getX());
         tag.putInt("client_pos_y", getY());
         return tag;
@@ -89,11 +87,10 @@ public interface INode extends ITaggable {
      * @param tag the mod tag
      */
     @Override default void read(CompoundNBT tag) {
-        if (tag.getBoolean("has_uuid"))
-            setUuid(Optional.of(UUID.fromString(tag.getString("node_uuid"))));
-        if (tag.getBoolean("has_to"))
-            setTo(Optional.of(UUID.fromString(tag.getString("to_uuid"))));
+        setUuid(Optional.of(TagUtils.readUniqueId(tag, "node_uuid")));
+        setTo(Optional.ofNullable(TagUtils.readUniqueId(tag, "to_uuid")));
         setX(tag.getInt("client_pos_x"));
         setY(tag.getInt("client_pos_y"));
+        setTilePos(TagUtils.readBlockPos(tag, "controller_pos"));
     }
 }

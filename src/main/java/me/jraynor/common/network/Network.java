@@ -2,12 +2,10 @@ package me.jraynor.common.network;
 
 import com.google.common.collect.Maps;
 import com.mojang.datafixers.util.Pair;
-import me.jraynor.NoMoreWires;
-import me.jraynor.api.packet.RemoveNode;
-import me.jraynor.old.INode2;
+import lombok.extern.log4j.Log4j2;
+import me.jraynor.Nmw;
+import me.jraynor.api.packet.*;
 import me.jraynor.common.network.packets.*;
-import me.jraynor.old.ClientNode;
-import me.jraynor.old.ServerNode;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
@@ -17,8 +15,6 @@ import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -30,11 +26,10 @@ import java.util.stream.Collectors;
 /**
  * This class will handle all of the networking between client and server.
  */
+@Log4j2
 public final class Network {
     private Network() {}
 
-    private static final Logger logger = LogManager.getLogger(NoMoreWires.MOD_ID);
-    //    static final Map<Class<? extends IPacket>, List<Pair<BiConsumer<IPacket, Supplier<NetworkEvent.Context>>, Object>>> packetCallbacks = new HashMap<>();
     static final Map<Class<? extends IPacket>, Map<Object, List<BiConsumer<IPacket, NetworkEvent.Context>>>> callbacks = Maps.newConcurrentMap();
 
 
@@ -52,7 +47,7 @@ public final class Network {
      * This will register the messages on both the client and server.
      */
     public static void initializeNetwork() {
-        INSTANCE = NetworkRegistry.newSimpleChannel(new ResourceLocation(NoMoreWires.MOD_ID, "nomorewires"),
+        INSTANCE = NetworkRegistry.newSimpleChannel(new ResourceLocation(Nmw.MOD_ID, "nomorewires"),
                 () -> "1.0",
                 s -> true,
                 s -> true);
@@ -64,12 +59,12 @@ public final class Network {
         registerPacket(LinkReset.class);
         registerPacket(LinkComplete.class);
         registerPacket(OpenScreen.class);
-        registerPacket(INode2.class);
-        registerPacket(ClientNode.class);
-        registerPacket(ServerNode.class);
         registerPacket(AddNode.class);
         registerPacket(AddLink.class);
         registerPacket(RemoveNode.class);
+        registerPacket(RequestSync.class);
+        registerPacket(ResponseSync.class);
+        registerPacket(SyncRead.class);
     }
 
     /**
@@ -121,6 +116,7 @@ public final class Network {
 
 
     /**
+     * This needs to be synchronized because the callbacks may be in use else where
      * This will get take all of the methods inside that object that have
      * as the first parameter a child of {@link IPacket} and have
      * {@link NetworkEvent.Context} as the second parameter.
@@ -129,20 +125,25 @@ public final class Network {
      */
     public static void subscribe(Object instance) {
         var methods = findSubscribers(instance);
-        for(var pair : methods){
+        for (var pair : methods) {
             var cls = pair.getFirst();
             var method = pair.getSecond();
-            var map = callbacks.computeIfAbsent(cls, aClass -> new HashMap<>());
-            var subscribers = map.computeIfAbsent(instance, o -> new ArrayList<>());
-            subscribers.add((packet, ctx) -> {
-                try {
-                    method.invoke(instance, packet, ctx);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    NoMoreWires.logger.error("Failed to invoke " + packet.getClass().getSimpleName() + " callback for " + instance.getClass().getSimpleName() + " instance.");
-                    e.printStackTrace();
-                }
-            });
-            NoMoreWires.logger.debug("Successfully subscribed " + cls.getSimpleName() + " callback for " + instance.getClass().getSimpleName() + " instance.");
+            if (!callbacks.containsKey(cls))
+                callbacks.put(cls, new HashMap<>());
+            var map = callbacks.get(cls);
+            if (!map.containsKey(instance))
+                map.put(instance, new ArrayList<>());
+            if (map.get(instance).add((packet, ctx) -> {
+                        try {
+                            method.setAccessible(true);
+                            method.invoke(instance, packet, ctx);
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            log.error("Failed to invoke " + packet.getClass().getSimpleName() + " callback for " + instance.getClass().getSimpleName() + " instance.");
+                            e.printStackTrace();
+                        }
+                    }
+            ))
+                log.debug("Successfully subscribed " + cls.getSimpleName() + " callback for " + instance.getClass().getSimpleName() + " instance.");
         }
     }
 
@@ -180,52 +181,20 @@ public final class Network {
     }
 
     /**
+     * This needs to be synchronized because the callbacks
      * This will simply remove any consumers/callbacks that are relatedt to lthe given instance
      *
      * @param instance the instance to check
      */
-    public static void unsubscribe(Object instance) {
-        callbacks.forEach((cls, cbs) -> {
-            cbs.remove(instance);
-            NoMoreWires.logger.debug("Successfully unsubscribed " + cls.getSimpleName() + " callback for " + instance.getClass().getSimpleName() + " instance.");
-        });
+    synchronized public static void unsubscribe(Object instance) {
+        synchronized (callbacks) {
+            for (var entry : callbacks.entrySet()) {
+                if (entry.getValue().remove(instance) != null)
+                    log.debug("Successfully unsubscribed " + entry.getKey().getSimpleName() + " callback for " + instance.getClass().getSimpleName() + " instance.");
+            }
+        }
+
     }
-
-    /**
-     * This will use reflection to find all the methods in a class that are packet callbacks
-     *
-     * @param object the object to scan for callbacks
-     */
-//    public static void register(Object object) {
-//        Method[] methods = object.getClass().getMethods();
-//        for (Method method : methods) {
-//            if (method.getParameterCount() == 2) {
-//                Class<?>[] types = method.getParameterTypes();
-//                if (IPacket.class.isAssignableFrom(types[0]) && Supplier.class.isAssignableFrom(types[1])) {
-//                    Class<? extends IPacket> packetClass = (Class<? extends IPacket>) types[0];
-//                    register(packetClass, object, (packet, contextSupplier) -> {
-//                        try {
-//                            method.invoke(object, packetClass.cast(packet), contextSupplier);
-////                            logger.info("Invoked packet callback method for class " + object.getClass().getSimpleName() + " and method name " + method.getName());
-//                        } catch (IllegalAccessException | InvocationTargetException e) {
-//                            logger.error("Failed to invoke the callback method for packet " + packetClass.getSimpleName());
-//                            e.printStackTrace();
-//                        }
-//                    });
-//                    logger.debug("Successfully registered method " + method.getName() + " for callback to packet " + packetClass.getSimpleName());
-//                }
-//            }
-//        }
-//    }
-
-    /**
-     * This will remove the current object from the list of registered subscribers
-     *
-     * @param object the object to unsubscribe
-     */
-//    public static void unregister(Object object) {
-//    }
-
 
     /**
      * This will send the packet directly to the given player
@@ -276,5 +245,10 @@ public final class Network {
         INSTANCE.sendToServer(packet);
     }
 
-
+    /**
+     * This will delete everything.
+     */
+    public static void delete() {
+        callbacks.clear();
+    }
 }

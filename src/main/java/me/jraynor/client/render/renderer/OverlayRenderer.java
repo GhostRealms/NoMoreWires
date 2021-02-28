@@ -1,26 +1,18 @@
 package me.jraynor.client.render.renderer;
 
-import me.jraynor.NoMoreWires;
+import me.jraynor.Nmw;
 import me.jraynor.api.event.OverlayStartEvent;
 import me.jraynor.api.event.OverlayStopEvent;
 import me.jraynor.api.link.ILink;
-import me.jraynor.api.node.INode;
 import me.jraynor.client.render.api.AbstractRenderer;
 import me.jraynor.client.render.api.core.IAbsorbable;
 import me.jraynor.client.render.api.core.RenderType;
 import me.jraynor.client.render.api.world.IRenderer3d;
-import me.jraynor.common.network.Network;
-import me.jraynor.common.network.packets.LinkComplete;
-import me.jraynor.common.network.packets.LinkReset;
-import me.jraynor.common.network.packets.LinkStart;
-import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.math.vector.Vector4f;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,7 +20,7 @@ import java.util.Set;
 /**
  * This will highlight the selected node in the world
  */
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = NoMoreWires.MOD_ID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = Nmw.MOD_ID, value = Dist.CLIENT)
 public class OverlayRenderer extends AbstractRenderer implements IAbsorbable, IRenderer3d {
     private final Set<ILink> highlighted = new HashSet<>();
 

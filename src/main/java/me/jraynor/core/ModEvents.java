@@ -1,19 +1,21 @@
 package me.jraynor.core;
 
-import me.jraynor.NoMoreWires;
+import lombok.extern.log4j.Log4j2;
+import me.jraynor.Nmw;
 //import me.jraynor.client.render.renderer.screens.UtilityScreen;
 import me.jraynor.common.network.Network;
-import net.minecraft.client.gui.ScreenManager;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 
 /**
  * This class subscribes to all of the mods events.
  */
-@Mod.EventBusSubscriber(value = {Dist.CLIENT, Dist.DEDICATED_SERVER}, modid = NoMoreWires.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@Log4j2
+@Mod.EventBusSubscriber(value = {Dist.CLIENT, Dist.DEDICATED_SERVER}, modid = Nmw.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModEvents {
 
     /**
@@ -23,19 +25,8 @@ public class ModEvents {
      */
     @SubscribeEvent public static void onCommonInit(final FMLCommonSetupEvent event) {
         Network.initializeNetwork();
-        NoMoreWires.logger.debug("Initialized network");
     }
 
 
-    /**
-     * This is used to initialize things on both the client and server.
-     *
-     * @param event the common setup event
-     */
-    @SubscribeEvent public static void onClientInit(final FMLClientSetupEvent event) {
-//        ScreenManager.registerFactory(ModRegistry.UTILITY_BLOCK_CONTAINER.get(), SingularityScreen::new);
-//        ScreenManager.registerFactory(ModRegistry.UTILITY_BLOCK_CONTAINER.get(), UtilityScreen::new);
-        NoMoreWires.logger.debug("Initialized client");
-    }
 
 }

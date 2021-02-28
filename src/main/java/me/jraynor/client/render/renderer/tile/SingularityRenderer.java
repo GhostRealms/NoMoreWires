@@ -1,7 +1,7 @@
 //package me.jraynor.client.render.renderer.tile;
 //
 //import com.mojang.blaze3d.matrix.MatrixStack;
-//import me.jraynor.NoMoreWires;
+//import me.jraynor.Nmw;
 ////import me.jraynor.common.tiles.UtilityTile;
 //import net.minecraft.client.renderer.IRenderTypeBuffer;
 //import net.minecraft.client.renderer.RenderType;
@@ -19,7 +19,7 @@
 // * This will render our singularity
 // */
 //public class SingularityRenderer extends AbstractTileRenderer<UtilityTile> {
-//    public static final ResourceLocation SINGULARITY_TEXTURE = new ResourceLocation(NoMoreWires.MOD_ID, "textures/block/utilityblock.png");
+//    public static final ResourceLocation SINGULARITY_TEXTURE = new ResourceLocation(Nmw.MOD_ID, "textures/block/utilityblock.png");
 //    private IBakedModel baseModel;
 //    private TextureAtlasSprite baseTexture;
 //

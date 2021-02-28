@@ -1,9 +1,10 @@
 package me.jraynor.core;
 
-import me.jraynor.NoMoreWires;
+import me.jraynor.Nmw;
 import me.jraynor.common.blocks.UtilityBlock;
 //import me.jraynor.common.containers.UtilityContainer;
 import me.jraynor.common.items.SynthesizerItem;
+import me.jraynor.common.network.Network;
 import me.jraynor.common.tiles.SingularityTile;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityType;
@@ -12,9 +13,6 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.tileentity.TileEntityType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -24,11 +22,11 @@ import net.minecraftforge.registries.ForgeRegistries;
  * This class keeps track of all of the blocks, items, tiles, containers, etc.
  */
 public class ModRegistry {
-    private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, NoMoreWires.MOD_ID);
-    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, NoMoreWires.MOD_ID);
-    private static final DeferredRegister<TileEntityType<?>> TILES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, NoMoreWires.MOD_ID);
-    private static final DeferredRegister<ContainerType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS, NoMoreWires.MOD_ID);
-    private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, NoMoreWires.MOD_ID);
+    private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, Nmw.MOD_ID);
+    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, Nmw.MOD_ID);
+    private static final DeferredRegister<TileEntityType<?>> TILES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, Nmw.MOD_ID);
+    private static final DeferredRegister<ContainerType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS, Nmw.MOD_ID);
+    private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, Nmw.MOD_ID);
     /**
      * ============== Utility block start =============
      */
@@ -56,4 +54,13 @@ public class ModRegistry {
         CONTAINERS.register(FMLJavaModLoadingContext.get().getModEventBus());
         ENTITIES.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
+
+    /**
+     * This is used to resubscribe all of the objects that need to be resubscribed
+     */
+    public static void subscribeNeeded() {
+        Network.subscribe(UTILITY_BLOCK.get());
+        Network.subscribe(SYNTHESIZER_ITEM.get());
+    }
+
 }

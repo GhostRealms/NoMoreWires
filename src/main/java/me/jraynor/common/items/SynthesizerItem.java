@@ -1,12 +1,15 @@
 package me.jraynor.common.items;
 
 import lombok.Getter;
+import me.jraynor.api.link.LinkServer;
+import me.jraynor.api.packet.AddNode;
 import me.jraynor.common.data.IOMode;
 import me.jraynor.common.data.LinkData;
 import me.jraynor.common.data.TransferMode;
 import me.jraynor.common.network.Network;
 import me.jraynor.common.network.packets.*;
 import me.jraynor.common.tiles.SingularityTile;
+import me.jraynor.core.Side;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
@@ -29,6 +32,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fml.network.NetworkDirection;
@@ -36,9 +40,7 @@ import net.minecraftforge.fml.network.NetworkEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
 
 import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * This is the go to item for the mod. It does all kinds of configurations.
@@ -50,7 +52,6 @@ public class SynthesizerItem extends Item {
 
     public SynthesizerItem() {
         super(new Properties().group(ItemGroup.MISC).maxStackSize(1));
-        Network.subscribe(this);
     }
 
     /**
@@ -77,23 +78,25 @@ public class SynthesizerItem extends Item {
      * This is called when the player left clicks on a block.
      */
     public void onLeftClickBlock(LeftClickBlock event, NetworkEvent.Context ctx) {
-        if (ctx.getDirection() == NetworkDirection.PLAY_TO_SERVER) {
-            var world = Objects.requireNonNull(ctx.getSender()).getServerWorld();
-            var player = ctx.getSender();
-            if (!world.isRemote && player != null) {
-                var pos = event.getBlockPos();
-                var side = event.getFace();
-                var stack = player.getHeldItemMainhand();
-                var tile = world.getTileEntity(pos);
-                if (LinkData.isLinkable(transferMode, world, pos, side)) {
-                    writeLink(pos, side, stack, tile, world, player);
-                } else {
-                    var name = world.getBlockState(pos).getBlock().getTranslatedName().getString();
-                    player.sendStatusMessage(new StringTextComponent(TextFormatting.RED + "can't" + TextFormatting.WHITE + " link with " + TextFormatting.GREEN + name + TextFormatting.WHITE + " in " + TextFormatting.UNDERLINE + TextFormatting.DARK_PURPLE + transferMode.name().toLowerCase() + " mode!"), true);
+        ctx.enqueueWork(() -> {
+            if (ctx.getDirection() == NetworkDirection.PLAY_TO_SERVER && Side.getThreadSide() == Side.SERVER) {
+                var world = Objects.requireNonNull(ctx.getSender()).getServerWorld();
+                var player = ctx.getSender();
+                if (!world.isRemote && player != null) {
+                    var pos = event.getBlockPos();
+                    var side = event.getFace();
+                    var stack = player.getHeldItemMainhand();
+                    var tile = world.getTileEntity(pos);
+                    if (LinkData.isLinkable(transferMode, world, pos, side)) {
+                        writeLink(pos, side, stack, tile, world, player);
+                    } else {
+                        var name = world.getBlockState(pos).getBlock().getTranslatedName().getString();
+                        player.sendStatusMessage(new StringTextComponent(TextFormatting.RED + "can't" + TextFormatting.WHITE + " link with " + TextFormatting.GREEN + name + TextFormatting.WHITE + " in " + TextFormatting.UNDERLINE + TextFormatting.DARK_PURPLE + transferMode.name().toLowerCase() + " mode!"), true);
+                    }
                 }
             }
-            ctx.setPacketHandled(true);
-        }
+        });
+        ctx.setPacketHandled(true);
     }
 
     /**
@@ -127,10 +130,7 @@ public class SynthesizerItem extends Item {
         var newLink = new LinkData(pos, side, transferMode, operation);
         if (LinkData.isLinked(stack) && tile instanceof SingularityTile) {
             var oldLink = LinkData.read(stack);
-            var utilityTile = (SingularityTile) tile;
-            assert oldLink != null;
-            utilityTile.onLink(newLink, oldLink);
-            Network.sendToClient(new LinkComplete(oldLink.getPos(), newLink.getPos(), oldLink.getSide(), newLink.getSide()), player);
+            createAndPostNode(oldLink, tile);
             LinkData.clear(stack);
             var state = world.getBlockState(oldLink.getPos());
             player.sendStatusMessage(new StringTextComponent(TextFormatting.GREEN + "completed" + TextFormatting.WHITE + " link with: " + TextFormatting.LIGHT_PURPLE + TextFormatting.UNDERLINE + state.getBlock().getTranslatedName().getString() + TextFormatting.WHITE + " at " + side.name().toLowerCase() + ", " + TextFormatting.GOLD + pos.getCoordinatesAsString()), true);
@@ -142,6 +142,23 @@ public class SynthesizerItem extends Item {
             player.sendStatusMessage(new StringTextComponent(TextFormatting.AQUA + "started" + TextFormatting.WHITE + " link with: " + TextFormatting.LIGHT_PURPLE + TextFormatting.UNDERLINE + state.getBlock().getTranslatedName().getString() + TextFormatting.WHITE + " at " + side.name().toLowerCase() + ", " + TextFormatting.GOLD + pos.getCoordinatesAsString()), true);
         }
     }
+
+    /**
+     * This will create a new link node and pass the event off.
+     *
+     * @param data the data
+     * @param tile the tile to have the position
+     */
+    private void createAndPostNode(LinkData data, TileEntity tile) {
+        var node = new LinkServer();
+        node.setUuid(Optional.of(UUID.randomUUID())); //Give it a random uuid
+        node.setX(random.nextInt(150));
+        node.setY(random.nextInt(150));
+        node.setPos(data.getPos());
+        node.setFace(data.getSide());
+        MinecraftForge.EVENT_BUS.post(new AddNode(tile.getPos(), node));
+    }
+
 
     /**
      * Adds useful information for the player regarding the link data

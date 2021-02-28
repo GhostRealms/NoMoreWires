@@ -6,12 +6,12 @@ import lombok.Setter;
 import me.jraynor.client.render.api.core.IContainer;
 import me.jraynor.client.render.api.core.IRenderer;
 import me.jraynor.client.render.api.core.RenderType;
-import me.jraynor.client.render.api.core.IInputEvents;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.Event;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,45 +22,36 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractScreenRenderer extends Screen implements IRenderer, IContainer {
     @Getter @Setter protected RenderType type;
-    @Getter @Setter protected boolean enabled;
-    @Getter private final Map<RenderType, List<IRenderer>> children = new HashMap<>();
-    @Getter @Setter IRenderer parent;
+    @Getter @Setter protected boolean enabled = true;
     @Getter @Setter private boolean initialized = false;
+    @Getter @Setter IRenderer parent;
+    @Getter private final Map<RenderType, List<IRenderer>> children = new HashMap<>();
+    private final List<Consumer<? extends Event>> subscribers = new ArrayList<>();
 
     public AbstractScreenRenderer(ITextComponent titleIn) {
         super(titleIn);
     }
 
     /**
-     * This will register all of the input events. This
-     * allows them to be passed to the children
+     * When this is overridden it call the super last
      */
-    protected void subscribe() {
-        /**
-         * This is used to pass the event to the children
-         */
-        Consumer<InputEvent.MouseInputEvent> onMouse = (event) -> {
-            getChildren().values().forEach(renderers -> renderers.forEach(renderer -> {
-                if (renderer instanceof IInputEvents) {
-                    var events = (IInputEvents) renderer;
-                    events.onMouse(event);
-                }
-            }));
-        };
+    public void subscribe() {
+        MinecraftForge.EVENT_BUS.register(this);
+    }
 
-        MinecraftForge.EVENT_BUS.addListener(onMouse);
-        /**
-         * This is used to pass the event to the children
-         */
-        Consumer<InputEvent.KeyInputEvent> onKey = (event) -> {
-            getChildren().values().forEach(renderers -> renderers.forEach(renderer -> {
-                if (renderer instanceof IInputEvents) {
-                    var events = (IInputEvents) renderer;
-                    events.onKey(event);
-                }
-            }));
-        };
-        MinecraftForge.EVENT_BUS.addListener(onKey);
+    /**
+     * This will remove all of the subscribers in the class
+     */
+    public void unsubscribe() {
+        MinecraftForge.EVENT_BUS.unregister(this);
+    }
+
+    /**
+     * This will unsubscribe the subscribers before closing the screen
+     */
+    @Override public void closeScreen() {
+        unsubscribe();
+        super.closeScreen();
     }
 
 
@@ -84,7 +75,6 @@ public abstract class AbstractScreenRenderer extends Screen implements IRenderer
      * we're extending abstract screen it's tick function takes precedence.
      */
     @Override public void tick() {
-        super.tick();
         tickChildren(RenderType.SCREEN);
     }
 

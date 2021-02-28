@@ -2,21 +2,14 @@ package me.jraynor.client.util;
 
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
 import com.mojang.blaze3d.systems.RenderSystem;
-import lombok.val;
-import me.jraynor.NoMoreWires;
+import me.jraynor.Nmw;
 import net.minecraft.client.renderer.RenderState;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import org.lwjgl.opengl.GL11;
 
 import java.util.OptionalDouble;
-
-import static com.mojang.blaze3d.platform.GlStateManager.*;
-import static com.mojang.blaze3d.platform.GlStateManager.DestFactor.*;
-import static com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA;
-import static com.mojang.blaze3d.platform.GlStateManager.SourceFactor.*;
 
 public final class RenderTypes {
 
@@ -47,6 +40,6 @@ public final class RenderTypes {
             .depthTest(noDepth)
             .build(false);
 
-    public static final RenderType COLORED_QUAD = RenderType.makeType(NoMoreWires.MOD_ID + ":quads", DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 256, glState);
-    public static final RenderType COLORED_LINE = RenderType.makeType(NoMoreWires.MOD_ID + ":lines", DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINE, 128, glState);
+    public static final RenderType COLORED_QUAD = RenderType.makeType(Nmw.MOD_ID + ":quads", DefaultVertexFormats.POSITION_COLOR, GL11.GL_QUADS, 256, glState);
+    public static final RenderType COLORED_LINE = RenderType.makeType(Nmw.MOD_ID + ":lines", DefaultVertexFormats.POSITION_COLOR, GL11.GL_LINE, 128, glState);
 }

@@ -3,8 +3,9 @@ package me.jraynor.api.node;
 import com.mojang.datafixers.util.Pair;
 import lombok.Getter;
 import lombok.Setter;
+import me.jraynor.api.manager.NodeController;
 import me.jraynor.api.menu.NodeMenu;
-import me.jraynor.api.manager.NodeManager;
+import me.jraynor.api.manager.NodeHolder;
 import me.jraynor.client.render.api.AbstractRenderer;
 import me.jraynor.client.render.api.core.IAbsorbable;
 import me.jraynor.client.render.api.core.RenderType;
@@ -14,10 +15,15 @@ import me.jraynor.client.render.api.hud.ITextureHolder;
 import me.jraynor.client.render.api.hud.ITransform;
 import me.jraynor.client.render.renderer.screens.SingularityScreen;
 import me.jraynor.common.network.Network;
-import me.jraynor.common.network.packets.AddLink;
+import me.jraynor.api.packet.AddLink;
+import me.jraynor.common.tiles.SingularityTile;
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.util.text.ITextProperties;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.InputEvent;
 import org.lwjgl.glfw.GLFW;
 
@@ -36,12 +42,13 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
     protected boolean shiftDown = false;
     @Getter private final Map<String, Pair<ResourceLocation, Pair<Integer, Integer>>> textures = new HashMap<>();
     /*==================== INode related =====================*/
-    @Getter @Setter private Optional<UUID> from = Optional.empty(), to = Optional.empty();
+    @Getter @Setter private Optional<UUID> to = Optional.empty();
     @Getter @Setter private Optional<UUID> uuid = Optional.empty();
     @Getter private final List<ITextProperties> textCache = new ArrayList<>();
-    @Getter @Setter protected NodeManager manager;
+    @Getter @Setter protected BlockPos tilePos;
     /*========================================================*/
     @Getter protected NodeMenu menu = new NodeMenu(this);
+
 
     public ClientNode() {
         super(RenderType.SCREEN);
@@ -56,7 +63,7 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
         menu.setNode(this);
         menu.setParent(this);
         menu.tryInitialize();
-        menu.setEnabled(false);
+        menu.setEnabled(false); //Only enabled when right clicked
     }
 
     @Override
@@ -84,6 +91,7 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
      */
     @Override
     public void render() {
+        super.render();
         if (parent != null) {
             if (parent instanceof SingularityScreen) {
                 var screen = (SingularityScreen) parent;
@@ -93,13 +101,9 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
                     this.x = Math.min(Math.max((ctx().getMouseX() - offsetX) - screen.getX(), 0), screen.getWidth() - getWidth());
                     this.y = Math.min(Math.max((ctx().getMouseY() - offsetY) - screen.getY(), 0), screen.getHeight() - getHeight());
                 }
-                if (getTo().isPresent()) {
-                    var toNode = manager.getAllNodes().get(getTo().get());
-                    if (toNode instanceof ClientNode) {
-                        var clientNode = (ClientNode) toNode;
-                        drawLine(getRelX() + (getWidth() / 2), (getRelY() + getHeight() / 2), clientNode.getRelX() + clientNode.getWidth() / 2, clientNode.getRelY() + clientNode.getHeight() / 2, new Vector3i(255, 255, 255));
-                    }
-                }
+                var clientNode = getController().getNode(ClientNode.class, getTo().orElse(null));
+                if (clientNode != null)
+                    drawLine(getRelX() + (getWidth() / 2), (getRelY() + getHeight() / 2), clientNode.getRelX() + clientNode.getWidth() / 2, clientNode.getRelY() + clientNode.getHeight() / 2, new Vector3i(255, 255, 255));
             }
         }
     }
@@ -159,16 +163,14 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
                 this.offsetX = 0;
                 this.offsetY = 0;
                 if (!shiftDown) {
+                    var controller = getController();
                     //TODO add a link
-                    if (manager != null) {
+                    if (controller != null) {
                         var linked = new AtomicBoolean(false);
-                        manager.getAllNodes().values().forEach(iNode -> {
-                            if (iNode instanceof ClientNode) {
-                                var clientNode = (ClientNode) iNode;
-                                if (clientNode.isHovered() && !linked.get()) {
-                                    onLink(iNode);
-                                    linked.set(true);
-                                }
+                        controller.forEachAs(ClientNode.class, node -> {
+                            if (node.isHovered() && !linked.get()) {
+                                onLink(node);
+                                linked.set(true);
                             }
                         });
                         if (!linked.get()) {
@@ -179,6 +181,20 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
             }
         }
     }
+
+    /**
+     * This will get the manager using the tile positon
+     *
+     * @return the node controller
+     */
+    @OnlyIn(Dist.CLIENT)
+    private NodeController getController() {
+        var tile = Minecraft.getInstance().world.getTileEntity(tilePos);
+        if (tile instanceof SingularityTile)
+            return ((SingularityTile) tile).getContainer();
+        return null;
+    }
+
 
     /**
      * This can be overridden but the super must be called.
@@ -193,8 +209,8 @@ public abstract class ClientNode extends AbstractRenderer implements INode, ITex
      * @param toAdd link to add
      */
     private void onLink(INode toAdd) {
-        Network.sendToServer(new AddLink(this.getUuid().get(), toAdd.getUuid().get()));
-        manager.addLink(this.getUuid().get(), toAdd.getUuid().get());
+//        Network.sendToServer(new AddLink(tilePos, this.getUuid().get(), toAdd.getUuid().get()));
+//        Network.sendToServer(new RequestSync(tilePos, Side.CLIENT));
     }
 
     /**

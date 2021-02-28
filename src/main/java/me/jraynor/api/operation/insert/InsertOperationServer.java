@@ -2,7 +2,6 @@ package me.jraynor.api.operation.insert;
 
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
-import me.jraynor.api.manager.NodeManager;
 import me.jraynor.api.operation.OperationServer;
 import me.jraynor.api.util.NodeType;
 

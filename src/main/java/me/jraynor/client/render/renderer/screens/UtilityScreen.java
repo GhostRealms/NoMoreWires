@@ -4,7 +4,7 @@
 //import com.mojang.blaze3d.matrix.MatrixStack;
 //import com.mojang.blaze3d.systems.RenderSystem;
 //import com.mojang.datafixers.util.Pair;
-//import me.jraynor.NoMoreWires;
+//import me.jraynor.Nmw;
 //import me.jraynor.client.ui.IOStateButton;
 //import me.jraynor.common.data.IOMode;
 //import me.jraynor.common.data.TransferMode;
@@ -32,7 +32,7 @@
 // * This is the main gui for the utility.
 // */
 //public class UtilityScreen extends ContainerScreen<UtilityContainer> {
-//    private ResourceLocation GUI = new ResourceLocation(NoMoreWires.MOD_ID, "textures/gui/base.png");
+//    private ResourceLocation GUI = new ResourceLocation(Nmw.MOD_ID, "textures/gui/base.png");
 //    private ItemStack renderedStack;
 //    private final Map<Facing, Pair<Integer, Integer>> faceOffset = new HashMap<>();
 //    private final Map<Facing, Direction> faceToDir = new HashMap<>();

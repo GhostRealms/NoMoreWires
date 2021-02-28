@@ -9,6 +9,7 @@ import me.jraynor.client.render.api.core.RenderType;
 import me.jraynor.client.render.api.hud.IRenderer2d;
 import me.jraynor.client.render.api.hud.ITextRenderer;
 import me.jraynor.client.render.api.hud.ITransform;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextProperties;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.client.event.InputEvent;
@@ -129,5 +130,12 @@ public abstract class MenuAction extends AbstractRenderer implements ITransform,
         return 12;
     }
 
+
+    /**
+     * @return the tilePos
+     */
+    protected BlockPos getTilePos(){
+        return menu.getNode().getTilePos();
+    }
 
 }

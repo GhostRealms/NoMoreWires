@@ -1,30 +1,32 @@
 package me.jraynor;
 
+import me.jraynor.common.CommonEvents;
 import me.jraynor.core.ClientEvents;
 import me.jraynor.core.ModEvents;
 import me.jraynor.core.ModRegistry;
+import me.jraynor.core.Side;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /**
  * This is the main entry point for the mod.
  */
-@Mod(NoMoreWires.MOD_ID)
-public class NoMoreWires {
+@Mod(Nmw.MOD_ID)
+public class Nmw {
     public static final String MOD_ID = "nmw";
-    public static final Logger logger = LogManager.getLogger(NoMoreWires.MOD_ID);
+    public static Side CURRENT_SIDE = Side.SERVER;//Starts as server, will be changed to client in the client only initialization
 
     /**
      * Here we add our listeners and initialize our register
      */
-    public NoMoreWires() {
+    public Nmw() {
         ModRegistry.init();
+        MinecraftForge.EVENT_BUS.register(CommonEvents.class);
         MinecraftForge.EVENT_BUS.register(ModEvents.class);
         MinecraftForge.EVENT_BUS.register(ClientEvents.class);
     }
+
 }

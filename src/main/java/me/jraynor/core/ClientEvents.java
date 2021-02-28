@@ -1,6 +1,6 @@
 package me.jraynor.core;
 
-import me.jraynor.NoMoreWires;
+import me.jraynor.Nmw;
 import me.jraynor.client.render.MasterRenderer;
 import me.jraynor.client.render.api.core.RenderType;
 import me.jraynor.common.network.Network;
@@ -10,7 +10,6 @@ import me.jraynor.common.util.StringUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -23,7 +22,7 @@ import net.minecraftforge.fml.common.Mod;
 /**
  * This class subscribes to all of the mods events.
  */
-@Mod.EventBusSubscriber(value = {Dist.CLIENT}, modid = NoMoreWires.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@Mod.EventBusSubscriber(value = {Dist.CLIENT}, modid = Nmw.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ClientEvents {
 
     /**
@@ -73,9 +72,9 @@ public class ClientEvents {
                 event.setCanceled(true);
             }
         }
-        if (event instanceof PlayerInteractEvent.LeftClickEmpty)
-            if (event.getItemStack().getItem() == ModRegistry.SYNTHESIZER_ITEM.get())
-                Network.sendToServer(new LeftClickAir(event.getItemStack(), event.getPlayer().isSneaking()));
+//        if (event instanceof PlayerInteractEvent.LeftClickEmpty)
+//            if (event.getItemStack().getItem() == ModRegistry.SYNTHESIZER_ITEM.get())
+//                Network.sendToServer(new LeftClickAir(event.getItemStack(), event.getPlayer().isSneaking()));
     }
 
 

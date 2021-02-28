@@ -1,7 +1,7 @@
 package me.jraynor.client.render.api.hud;
 
 import com.mojang.datafixers.util.Pair;
-import me.jraynor.NoMoreWires;
+import me.jraynor.Nmw;
 import me.jraynor.client.render.api.core.IRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
@@ -31,7 +31,7 @@ public interface ITextureHolder extends IRenderer {
      * @param path the path to the resource, the mod id will be included.
      */
     default void addTexture(String name, String path, int width, int height) {
-        getTextures().put(name, new Pair<>(new ResourceLocation(NoMoreWires.MOD_ID, path), new Pair<>(width, height)));
+        getTextures().put(name, new Pair<>(new ResourceLocation(Nmw.MOD_ID, path), new Pair<>(width, height)));
     }
 
     /**

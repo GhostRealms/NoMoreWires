@@ -40,9 +40,7 @@ public class UtilityBlock extends Block {
                 .hardnessAndResistance(2.0f)
                 .setLightLevel(state -> state.get(BlockStateProperties.POWERED) ? 14 : 0)
         );
-        Network.subscribe(this);
     }
-
 
     /**
      * Called throughout the code as a replacement for block instanceof BlockContainer
@@ -70,6 +68,7 @@ public class UtilityBlock extends Block {
     @Nullable @Override public TileEntity createTileEntity(BlockState state, IBlockReader world) {
         return ModRegistry.UTILITY_BLOCK_TILE.get().create();
     }
+
     @Override
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand hand, BlockRayTraceResult rayTraceResult) {
         if (worldIn.isRemote) return ActionResultType.SUCCESS; // on client side, don't do anything
